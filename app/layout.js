@@ -2,17 +2,24 @@
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import HeaderBar from "./components/HeaderBar";
+
+
 import { MantineProvider, Box, Flex, Stack } from "@mantine/core";
+import '@mantine/notifications/styles.css';
 import "@mantine/core/styles.layer.css";
 import "@fontsource/poppins";
 import "./globals.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Notifications } from "@mantine/notifications";
 
 export default function RootLayout({ children }) {
   const [appName, setAppName] = useState("Desibhabhi Nights");
+  const [queryClient] = useState(() => new QueryClient());
 
   return (
     <html lang="en">
       <body style={{ fontFamily: "Poppins, sans-serif" }}>
+      <QueryClientProvider client={queryClient}>
         <MantineProvider
           withGlobalStyles
           withNormalizeCSS
@@ -21,7 +28,9 @@ export default function RootLayout({ children }) {
           }}
         >
           <div className="flex">
+            <Notifications position="top-right" zIndex={9999} />
             {/* Sidebar - Now Takes 30% Width */}
+
             <Sidebar appName={appName} setAppName={setAppName} />
 
             {/* Main Content Area - Takes Remaining 70% */}
@@ -31,6 +40,7 @@ export default function RootLayout({ children }) {
             </div>
           </div>
         </MantineProvider>
+        </QueryClientProvider>
       </body>
     </html>
   );
