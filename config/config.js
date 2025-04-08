@@ -1,3 +1,5 @@
+import { verifyEmail } from "@/apis/auth/authApi";
+
 // config/config.js
 const config = {
     apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ,
@@ -10,7 +12,9 @@ const config = {
       verifyEmail: '/api/v1/auth/verify-email',
       upload: '/api/v1/videos/upload',
       uploadProgress: '/api/v1/videos/progress',
-      metadata: '/api/v1/videos/metadata'
+      metadata: '/api/v1/videos/metadata',
+      resendEmail: '/api/v1/auth/resend-verification',
+      verifyEmail: '/api/v1/auth/verify-email'
     },
   };
   

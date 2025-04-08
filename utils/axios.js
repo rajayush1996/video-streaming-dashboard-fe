@@ -73,7 +73,7 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await axios.get(`${config.apiBaseUrl}/auth/v1/refresh-token`);
+        const res = await axios.get(`${config.apiBaseUrl}/api/auth/v1/refresh-token`);
         const { accessToken } = res.data;
 
         localStorage.setItem('auth_token', accessToken);
