@@ -13,8 +13,10 @@ const config = {
       upload: '/api/v1/videos/upload',
       uploadProgress: '/api/v1/videos/progress',
       metadata: '/api/v1/videos/metadata',
+      mediaMetadata: '/api/v1/media-metadata',
       resendEmail: '/api/v1/auth/resend-verification',
-      verifyEmail: '/api/v1/auth/verify-email'
+      verifyEmail: '/api/v1/auth/verify-email',
+      refreshToken: '/api/v1/auth/refresh-token'
     },
   };
   

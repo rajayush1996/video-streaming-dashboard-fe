@@ -12,7 +12,8 @@ export const useVideoUploader = () => {
     form.append('thumbnail', file)
 
     const res = await axios.post(config.endpoints.upload, form);
-    return res.data.thumbUrl;
+
+    return { file: res?.data?.thumbUrl?.file, url: res?.data?.thumbUrl?.url };
   };
 
   const uploadVideoInChunks = async (file, fileName, onProgress) => {
@@ -34,9 +35,13 @@ export const useVideoUploader = () => {
       formData.append('totalChunks', totalChunks.toString());
       formData.append('chunk', chunk);
 
-      await axios.post(config.endpoints.upload, formData);
+      const res = await axios.post(config.endpoints.upload, formData);
       if (onProgress) onProgress(Math.round(((i + 1) / totalChunks) * 100));
+      if(res.data.file) {
+        return { file: res?.data?.file, url: res?.data?.url }
+      }
     }
+    
 
     // return `https://bunnycdn.example.com/videos/${fileName}`;
   };
@@ -55,15 +60,15 @@ export const useVideoUploader = () => {
     const videoName = `${fileId}_${sanitizedTitle}.mp4`;
 
     try {
-      const thumbUrl = await uploadThumbnail(thumbnail, thumbName);
-      const videoUrl = await uploadVideoInChunks(video, videoName, onProgress);
+      const thumbNailInfo = await uploadThumbnail(thumbnail, thumbName);
+      const videoInfo = await uploadVideoInChunks(video, videoName, onProgress);
 
       await axios.post(config.endpoints.metadata, {
         title,
         description,
         category,
-        mediaFileId: videoName,
-        thumbnailId: thumbName,
+        mediaFileId: videoInfo?.file?.fileId,
+        thumbnailId: thumbNailInfo?.file?.fileId,
       });
 
       showNotification({
@@ -73,7 +78,7 @@ export const useVideoUploader = () => {
         icon:  <IconCircleCheck size={20} />,
       });
 
-      return { thumbUrl, videoUrl };
+      return { thumbUrl: thumbNailInfo.url, videoUrl: videoInfo.url };
     } catch (err) {
       showNotification({
         title: 'Upload Failed',

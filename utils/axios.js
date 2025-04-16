@@ -1,6 +1,7 @@
 // utils/axiosInstance.js
 import axios from 'axios';
 import config from '@config/config';
+import Cookies from 'js-cookie';
 
 const axiosInstance = axios.create({
   baseURL: config.apiBaseUrl,
@@ -73,7 +74,14 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await axios.get(`${config.apiBaseUrl}/api/auth/v1/refresh-token`);
+        // Use the refresh token endpoint from config or fallback to a default
+        const refreshEndpoint = config.endpoints.refreshToken || '/api/v1/auth/refresh-token';
+        
+        // Use POST method for refresh token request
+        const res = await axios.post(`${config.apiBaseUrl}${refreshEndpoint}`, {
+          refreshToken: refreshToken
+        });
+        
         const { accessToken } = res.data;
 
         localStorage.setItem('auth_token', accessToken);
@@ -82,7 +90,9 @@ axiosInstance.interceptors.response.use(
 
         return axiosInstance(originalRequest);
       } catch (refreshError) {
+        console.error('Refresh token error:', refreshError);
         localStorage.removeItem('auth_token');
+        Cookies.remove('refresh_token');
         window.location.href = '/signin';
         return Promise.reject(refreshError);
       } finally {
