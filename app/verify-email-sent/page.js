@@ -17,7 +17,7 @@ import { IconAlertCircle, IconCircleCheck, IconMail } from '@tabler/icons-react'
 import { resendVerification } from '@apis/auth/authApi';
 import { Suspense } from 'react';
 
-export default function VerifyEmailSent() {
+export  function VerifyEmailSent() {
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const searchParams = useSearchParams();
@@ -61,6 +61,7 @@ export default function VerifyEmailSent() {
   };
 
   return (
+    <Suspense fallback={<div>Loading...</div>}>
     <Container size="xs" pt="xl">
       <Transition mounted transition="fade" duration={400} timingFunction="ease">
         {(styles) => (
@@ -101,11 +102,13 @@ export default function VerifyEmailSent() {
         )}
       </Transition>
     </Container>
+    </Suspense>
+
   );
 }
 
 // Wrap the component in Suspense to handle client-side navigation hooks
-export function SuspenseWrapper() {
+export default function VerifyEmailSentPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <VerifyEmailSent />
