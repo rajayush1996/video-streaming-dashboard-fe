@@ -62,11 +62,11 @@ export default function VideoRowList({ videos, onEdit, onDelete }) {
             </Group>
             
             {/* Video URL */}
-            {video.mediaFileUrl && (
+            {/* {video.mediaFileUrl && (
               <Text size="xs" c="dimmed" className="mt-2 truncate">
                 URL: {video.mediaFileUrl}
               </Text>
-            )}
+            )} */}
           </Box>
 
           {/* Icons */}
