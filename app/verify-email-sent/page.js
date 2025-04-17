@@ -108,7 +108,7 @@ export  function VerifyEmailSent() {
 }
 
 // Wrap the component in Suspense to handle client-side navigation hooks
-export default function VerifyEmailSentPage() {
+export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <VerifyEmailSent />
