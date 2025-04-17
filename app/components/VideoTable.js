@@ -25,14 +25,16 @@ export default function VideoRowList({ videos, onEdit, onDelete }) {
 
   return (
     <Box className="space-y-4">
-      {videos.map((video) => (
+      {videos.map((video) => {
+        
+        return (
         <Box
           key={video.id}
           className="flex gap-4 items-start bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-all"
         >
           {/* Thumbnail */}
           <Image
-            src={video.thumbnail || 'https://via.placeholder.com/160x90?text=No+Image'}
+            src={video.thumbnailUrl || 'https://via.placeholder.com/160x90?text=No+Image'}
             alt={video.title}
             className='h-[150px] w-[150px] object-cover rounded-md'
             width={160}
@@ -60,9 +62,9 @@ export default function VideoRowList({ videos, onEdit, onDelete }) {
             </Group>
             
             {/* Video URL */}
-            {video.url && (
+            {video.mediaFileUrl && (
               <Text size="xs" c="dimmed" className="mt-2 truncate">
-                URL: {video.url}
+                URL: {video.mediaFileUrl}
               </Text>
             )}
           </Box>
@@ -92,7 +94,7 @@ export default function VideoRowList({ videos, onEdit, onDelete }) {
             </Tooltip>
           </Group>
         </Box>
-      ))}
+      )})}
     </Box>
   );
 }

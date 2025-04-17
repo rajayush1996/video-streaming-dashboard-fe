@@ -19,12 +19,13 @@ export default function VideoPlayerPage() {
       
       // Try to get video data from URL parameters
       const videoDataParam = searchParams.get('data');
+      console.log("🚀 ~ useEffect ~ videoDataParam:", videoDataParam);
       
       if (videoDataParam) {
         // Parse the video data from the URL
         const videoData = JSON.parse(decodeURIComponent(videoDataParam));
         console.log('Video data:', videoData); // Debug log
-        console.log('Video URL:', videoData.url); // Debug log for URL
+        console.log('Video URL:', videoData.mediaFileUrl); // Debug log for URL
         console.log('Video thumbnail:', videoData.thumbnail); // Debug log for thumbnail
         setVideo(videoData);
         setLoading(false);
@@ -130,9 +131,9 @@ export default function VideoPlayerPage() {
               controls
               autoPlay
               className="w-full h-full"
-              poster={video.thumbnail}
+              poster={video.thumbnailUrl}
             >
-              <source src={video.url} type="video/mp4" />
+              <source src={video.mediaFileUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
