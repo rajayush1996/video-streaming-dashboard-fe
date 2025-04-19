@@ -1,52 +1,161 @@
 "use client";
-import Link from "next/link";
-import { Button, Select } from "@mantine/core";
-import AppToggle from "./AppToggle";
+import { Drawer, List, ListItem, ListItemIcon, ListItemText, ListItemButton, Box, Typography, Divider, useTheme, useMediaQuery } from '@mui/material';
+import { useRouter, usePathname } from 'next/navigation';
+import { IconHome, IconVideo, IconBook, IconSettings, IconUsers, IconLogout } from '@tabler/icons-react';
+import { useState, useEffect } from 'react';
 
-export default function Sidebar({ appName, setAppName }) {
+const menuItems = [
+  { icon: IconHome, label: 'Dashboard', path: '/dashboard' },
+  { icon: IconVideo, label: 'Video Management', path: '/videos' },
+  { icon: IconBook, label: 'Blog Management', path: '/blogs' },
+  { icon: IconUsers, label: 'User Management', path: '/users' },
+  { icon: IconSettings, label: 'Settings', path: '/settings' },
+];
+
+export default function SideBar({ open, onClose }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const drawerWidth = 280;
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    router.push('/signin');
+  };
+
+  const drawer = (
+    <Box sx={{ overflow: 'auto' }}>
+      <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
+          Video Streaming
+        </Typography>
+      </Box>
+      <Divider />
+      <List>
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.path;
+          return (
+            <ListItem key={item.path} disablePadding>
+              <ListItemButton
+                selected={isActive}
+                onClick={() => {
+                  router.push(item.path);
+                  if (isMobile) onClose();
+                }}
+                sx={{
+                  py: 1.5,
+                  px: 3,
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <Icon 
+                    size={20} 
+                    color={isActive ? theme.palette.primary.main : theme.palette.text.secondary} 
+                  />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.label} 
+                  sx={{
+                    '& .MuiTypography-root': {
+                      fontWeight: isActive ? 600 : 400,
+                      color: isActive ? theme.palette.primary.main : theme.palette.text.primary,
+                    },
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
+      <Divider sx={{ my: 1 }} />
+      <List>
+        <ListItem disablePadding>
+          <ListItemButton
+            onClick={handleLogout}
+            sx={{
+              py: 1.5,
+              px: 3,
+              color: theme.palette.error.main,
+              '&:hover': {
+                backgroundColor: 'rgba(211, 47, 47, 0.08)',
+              },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 40 }}>
+              <IconLogout size={20} color={theme.palette.error.main} />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Logout" 
+              sx={{
+                '& .MuiTypography-root': {
+                  fontWeight: 500,
+                },
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+      </List>
+    </Box>
+  );
+
+  if (!mounted) return null;
+
   return (
-    <div className="w-1/4 h-screen bg-[#0f172a] text-white fixed top-0 left-0 flex flex-col px-6 py-8 space-y-8 shadow-lg font-[Poppins]">
-      {/* App Switcher Dropdown */}
-      <AppToggle appName={appName} setAppName={setAppName} />
-
-
-      {/* Navigation Buttons */}
-      <nav className="flex flex-col gap-4">
-        <NavItem href="/videos" text="Video Management" />
-        <NavItem href="/blogs" text="Blog Management" />
-        <NavItem href="/users" text="User Management" />
-        <NavItem href="/settings" text="Settings" />
-        <NavItem href="/logout" text="Logout" />
-      </nav>
-    </div>
+    <Box
+      component="nav"
+      sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+    >
+      {isMobile ? (
+        <Drawer
+          variant="temporary"
+          open={open}
+          onClose={onClose}
+          ModalProps={{
+            keepMounted: true,
+          }}
+          sx={{
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: drawerWidth,
+              backgroundColor: theme.palette.background.paper,
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+      ) : (
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: 'none', sm: 'block' },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: drawerWidth,
+              backgroundColor: theme.palette.background.paper,
+              borderRight: `1px solid ${theme.palette.divider}`,
+            },
+          }}
+          open
+        >
+          {drawer}
+        </Drawer>
+      )}
+    </Box>
   );
 }
-
-const NavItem = ({ href, text }) => (
-  <div className="w-full">
-    <Link href={href} className="block w-full no-underline">
-      <Button
-        fullWidth
-        radius="md"
-        size="md"
-        styles={{
-          root: {
-            backgroundColor: "#334155",
-            color: "white",
-            fontWeight: 600,
-            fontSize: "15px",
-            padding: "12px",
-            borderRadius: "10px",
-            transition: "all 0.2s ease",
-            fontFamily: "Poppins, sans-serif",
-          },
-          rootHovered: {
-            backgroundColor: "#60a5fa",
-          },
-        }}
-      >
-        {text}
-      </Button>
-    </Link>
-  </div>
-);

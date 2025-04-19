@@ -1,42 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import {
-  Box,
   Container,
+  Box,
   Typography,
   TextField,
   Button,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
+  Select,
+  MenuItem,
   CircularProgress,
-  Alert,
   Paper,
   Grid,
   IconButton,
   InputAdornment,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ImageIcon from '@mui/icons-material/Image';
-import { useCreateBlog } from '@hooks/useBlogs';
+import { useUpdateBlog } from '@hooks/useBlogs';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
-  height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  whiteSpace: 'nowrap',
-  width: 1,
-});
 
 const categories = [
   { value: 'technology', label: 'Technology' },
@@ -45,8 +31,9 @@ const categories = [
   { value: 'education', label: 'Education' },
 ];
 
-export default function BlogUploadPage() {
+export default function BlogEditPage() {
   const router = useRouter();
+  const { id } = useParams();
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -57,7 +44,35 @@ export default function BlogUploadPage() {
   const [preview, setPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const { mutate, isLoading, isError } = useCreateBlog();
+  const { mutate: updateBlog, isLoading } = useUpdateBlog();
+
+  useEffect(() => {
+    // Fetch blog data
+    const fetchBlog = async () => {
+      try {
+        // Implement fetch blog functionality
+        const blogData = {
+          title: 'Sample Blog',
+          description: 'Sample Description',
+          category: 'technology',
+          content: 'Sample Content',
+          thumbnailUrl: 'https://example.com/image.jpg',
+        };
+        setForm({
+          title: blogData.title,
+          description: blogData.description,
+          category: blogData.category,
+          content: blogData.content,
+          thumbnail: null,
+        });
+        setPreview(blogData.thumbnailUrl);
+      } catch (error) {
+        toast.error('Failed to load blog data');
+      }
+    };
+
+    fetchBlog();
+  }, [id]);
 
   const handleChange = (field) => (e) => {
     setForm({ ...form, [field]: e.target.value });
@@ -80,8 +95,8 @@ export default function BlogUploadPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!form.title || !form.description || !form.category || !form.content || !form.thumbnail) {
-      toast.error('Please fill in all fields');
+    if (!form.title || !form.description || !form.category || !form.content) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -89,25 +104,17 @@ export default function BlogUploadPage() {
       setIsUploading(true);
       const formData = new FormData();
       Object.keys(form).forEach(key => {
-        formData.append(key, form[key]);
+        if (form[key] !== null) {
+          formData.append(key, form[key]);
+        }
       });
 
-      await mutate(formData);
+      await updateBlog({ id, formData });
       
-      // Reset form
-      setForm({
-        title: '',
-        description: '',
-        category: '',
-        content: '',
-        thumbnail: null,
-      });
-      setPreview(null);
-      
-      toast.success('Blog created successfully!');
+      toast.success('Blog updated successfully!');
       router.push('/blogs');
     } catch (error) {
-      toast.error(error.message || 'Failed to create blog');
+      toast.error(error.message || 'Failed to update blog');
     } finally {
       setIsUploading(false);
     }
@@ -117,7 +124,7 @@ export default function BlogUploadPage() {
     <Container maxWidth="md">
       <Paper elevation={3} sx={{ p: 4, mt: 4, mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center" color="primary">
-          Create New Blog
+          Edit Blog
         </Typography>
 
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
@@ -195,11 +202,12 @@ export default function BlogUploadPage() {
                 startIcon={<CloudUploadIcon />}
                 fullWidth
               >
-                Upload Thumbnail
-                <VisuallyHiddenInput
+                Upload New Thumbnail
+                <input
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
+                  hidden
                 />
               </Button>
               {preview && (
@@ -224,21 +232,12 @@ export default function BlogUploadPage() {
                 disabled={isLoading || isUploading}
                 startIcon={isLoading || isUploading ? <CircularProgress size={20} /> : null}
               >
-                {isLoading || isUploading ? 'Creating...' : 'Create Blog'}
+                {isLoading || isUploading ? 'Updating...' : 'Update Blog'}
               </Button>
             </Grid>
-
-            {/* Error Message */}
-            {isError && (
-              <Grid item xs={12}>
-                <Alert severity="error">
-                  Something went wrong. Please try again.
-                </Alert>
-              </Grid>
-            )}
           </Grid>
         </Box>
       </Paper>
     </Container>
   );
-}
+} 

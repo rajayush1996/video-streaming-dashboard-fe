@@ -1,21 +1,84 @@
-'use client'
-import { Container, TextInput, Button } from '@mantine/core';
+'use client';
+import { Container, TextField, Button, Box, Typography, Paper } from '@mui/material';
 import { useState } from 'react';
+import { toast } from 'react-hot-toast';
 
 export default function SettingsPage() {
-  const [profile, setProfile] = useState({ username: '', firstName: '', lastName: '', password: '' });
+  const [formData, setFormData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
-  const handleSave = () => {
-    console.log('Saving profile:', profile);
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.newPassword !== formData.confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    // TODO: Implement password change API call
+    toast.success('Password changed successfully');
+    setFormData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
   };
 
   return (
-    <Container>
-      <TextInput label="Username" value={profile.username} onChange={(e) => setProfile({ ...profile, username: e.target.value })} />
-      <TextInput label="First Name" value={profile.firstName} onChange={(e) => setProfile({ ...profile, firstName: e.target.value })} />
-      <TextInput label="Last Name" value={profile.lastName} onChange={(e) => setProfile({ ...profile, lastName: e.target.value })} />
-      <TextInput label="Change Password" type="password" value={profile.password} onChange={(e) => setProfile({ ...profile, password: e.target.value })} />
-      <Button mt="md" onClick={handleSave}>Save Settings</Button>
+    <Container maxWidth="sm">
+      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Change Password
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          <TextField
+            fullWidth
+            label="Current Password"
+            name="currentPassword"
+            type="password"
+            value={formData.currentPassword}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          <TextField
+            fullWidth
+            label="New Password"
+            name="newPassword"
+            type="password"
+            value={formData.newPassword}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          <TextField
+            fullWidth
+            label="Confirm New Password"
+            name="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{ mt: 3 }}
+          >
+            Change Password
+          </Button>
+        </Box>
+      </Paper>
     </Container>
   );
 }

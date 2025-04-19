@@ -1,183 +1,357 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import {
-  TextInput,
-  PasswordInput,
+  Container, 
+  Box, 
+  Typography, 
+  TextField, 
   Button,
-  Container,
   Paper,
-  Title,
-  Text,
-  Group,
-  Divider,
-  Transition,
-  Center,
-  Anchor,
-} from '@mantine/core';
-import { useLogin, useSignUp } from '@hooks/useAuth';
-import { showNotification } from '@mantine/notifications';
-import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react';
-// import { isAuthenticated } from '@utils/authGuard';
+  Stack, 
+  InputAdornment,
+  IconButton,
+  CircularProgress,
+} from '@mui/material';
+import { Email, Lock, Person, Visibility, VisibilityOff } from '@mui/icons-material';
+import { useLogin, useSignUp } from '@/hooks/useAuth';
 
-export default function AuthPage() {
-  const router = useRouter();
-  const [mode, setMode] = useState('signin');
-  const [formData, setFormData] = useState({
+const AuthPage = () => {
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({
     name: '',
-    email: '',
+    identifier: '',
+    password: '',
+    isEmail: false,
+  });
+  const [errors, setErrors] = useState({
+    name: '',
+    identifier: '',
     password: '',
   });
 
-  
-  const { mutate: login, isLoading: loginLoading, error: loginError } = useLogin();
-  const { mutate: signUp, isLoading: signUpLoading, error: signUpError } = useSignUp();
+  const loginMutation = useLogin();
+  const signUpMutation = useSignUp();
 
-  const handleSubmit = () => {
-    if (mode === 'signin') {
-      login(
-        { email: formData.email, password: formData.password },
-        {
-          onSuccess: (res) => {
-            try {
-              // Check if tokens exist in the response
-              if (res && res.tokens) {
-                const { accessToken, refreshToken } = res.tokens;
-                localStorage.setItem('auth_token', accessToken);
-                document.cookie = `refresh_token=${refreshToken}; path=/; secure; samesite=strict;`;
-                showNotification({ 
-                  title: 'Success', 
-                  message: 'Login successful!', 
-                  color: 'green', 
-                  icon: <IconCircleCheck size={20} />, 
-                });
-                
-                // Redirect to videos page after successful login
-                router.push('/videos');
-              } else {
-                console.error('Invalid response structure:', res);
-                showNotification({ 
-                  title: 'Error', 
-                  message: 'Invalid response from server', 
-                  color: 'red', 
-                  icon: <IconAlertCircle size={20} />, 
-                });
-              }
-            } catch (error) {
-              console.error('Error during login success handling:', error);
-              showNotification({ 
-                title: 'Error', 
-                message: 'An unexpected error occurred', 
-                color: 'red', 
-                icon: <IconAlertCircle size={20} />, 
-              });
-            }
-          },
-          onError: (err) => {
-            console.error('Login error:', err);
-            showNotification({ 
-              title: 'Error', 
-              message: err.message || 'Login failed', 
-              color: 'red', 
-              icon: <IconAlertCircle size={20} />, 
-            });
-          }
+  const validateField = (field, value) => {
+    if (field === 'identifier') {
+      if (!value.trim()) {
+        return 'Username or Email is required';
+      }
+      if (value.includes('@')) {
+        if (!/\S+@\S+\.\S+/.test(value)) {
+          return 'Invalid email format';
         }
-      );
+      } else {
+        if (value.length < 3) {
+          return 'Username must be at least 3 characters';
+        }
+      }
+    } else if (field === 'password') {
+      if (!value) {
+        return 'Password is required';
+      }
+      if (value.length < 6) {
+        return 'Password must be at least 6 characters';
+      }
+    } else if (field === 'name' && isSignUp) {
+      if (!value.trim()) {
+        return 'Name is required';
+      }
+    }
+    return '';
+  };
+
+  const handleChange = (field) => (e) => {
+    const value = e.target.value;
+    
+    if (field === 'identifier') {
+      const isEmail = value.includes('@');
+      setForm({ ...form, [field]: value, isEmail });
     } else {
-      signUp(
-        formData,
-        {
-          onSuccess: (res) => {
-            showNotification({ title: 'Success', message: res.message || 'Sign up successful!', color: 'green',  icon: <IconCircleCheck size={20} />, });
-            router.push('/verify-email-sent?email=' + encodeURIComponent(formData.email));
-          },
-          onError: (err) => {
-            showNotification({ title: 'Error', message: err.message, color: 'red' });
-          }
-        }
-      );
+      setForm({ ...form, [field]: value });
+    }
+
+    // Live validation
+    const fieldError = validateField(field, value);
+    setErrors(prev => ({
+      ...prev,
+      [field]: fieldError
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Validate identifier
+    const identifierError = validateField('identifier', form.identifier);
+    if (identifierError) {
+      newErrors.identifier = identifierError;
+    }
+    
+    // Validate password
+    const passwordError = validateField('password', form.password);
+    if (passwordError) {
+      newErrors.password = passwordError;
+    }
+    
+    // Additional validation for sign up
+    if (isSignUp) {
+      const nameError = validateField('name', form.name);
+      if (nameError) {
+        newErrors.name = nameError;
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
+
+    const requestData = {
+      identifier: form.identifier.trim(),
+      password: form.password,
+      ...(isSignUp && { name: form.name.trim() }),
+    };
+
+    if (isSignUp) {
+      signUpMutation.mutate(requestData);
+    } else {
+      loginMutation.mutate(requestData);
     }
   };
 
-  const isFormValid = () => {
-    if (!formData.email || !formData.password) return false;
-    if (mode === 'signup' && !formData.name) return false;
-    if (!/^\S+@\S+\.\S+$/.test(formData.email)) return false;
-    if (formData.password.length < 6) return false;
-    return true;
-  };
-
-  // useEffect(() => {
-  //   if (isAuthenticated()) {
-  //     router.replace('/videos');
-  //   }
-  // }, []);
-  
+  const isLoading = loginMutation.isPending || signUpMutation.isPending;
 
   return (
-    <Container size="xs" pt="xl">
-      <Transition mounted transition="fade" duration={400} timingFunction="ease">
-        {(styles) => (
-          <Paper withBorder p="lg" radius="md" style={styles} shadow="md">
-            <Title order={2} align="center" mb="md">
-              {mode === 'signin' ? 'Welcome Back' : 'Create Account'}
-            </Title>
-            <Text align="center" size="sm" color="dimmed" mb="xl">
-              {mode === 'signin'
-                ? 'Sign in to access your dashboard'
-                : 'Sign up and start your journey'}
-            </Text>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 p-4">
+      <Container maxWidth="sm">
+        <Paper 
+          elevation={3} 
+          className="p-8 md:p-10 rounded-xl bg-white/10 backdrop-blur-lg"
+          sx={{
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <Stack spacing={4}>
+            <Box className="text-center">
+              <Typography
+                variant="h4"
+                component="h1"
+                className="text-white font-bold mb-2"
+              >
+                {isSignUp ? 'Create Account' : 'Welcome Back'}
+              </Typography>
+              <Typography
+                variant="body1"
+                className="text-gray-300"
+              >
+                {isSignUp 
+                  ? 'Sign up to start streaming your favorite content'
+                  : 'Sign in to continue where you left off'}
+              </Typography>
+            </Box>
 
-            {mode === 'signup' && (
-              <TextInput
-                variant="default"
+            <Box 
+              component="form" 
+              onSubmit={handleFormSubmit}
+              noValidate
+              sx={{ width: '100%' }}
+            >
+              <Stack spacing={3}>
+                {isSignUp && (
+                  <TextField
+                    fullWidth
                 label="Name"
-                placeholder="John Doe"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                mb="sm"
-              />
-            )}
+                    value={form.name}
+                    onChange={handleChange('name')}
+                    required
+                    error={!!errors.name}
+                    helperText={errors.name}
+                    variant="outlined"
+                    className="bg-white/5 backdrop-blur-sm"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person className="text-white" />
+                        </InputAdornment>
+                      ),
+                      sx: {
+                        height: '56px',
+                        color: 'white',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255, 255, 255, 0.5)',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'white',
+                        },
+                      },
+                    }}
+                    InputLabelProps={{
+                      className: 'text-white',
+                      sx: {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                      },
+                    }}
+                  />
+                )}
 
-            <TextInput
-              variant="default"
-              label="Email"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              mb="sm"
-            />
+                <TextField
+                  fullWidth
+                  label="Username or Email"
+                  type={form.isEmail ? "email" : "text"}
+                  value={form.identifier}
+                  onChange={handleChange('identifier')}
+                  required
+                  error={!!errors.identifier}
+                  helperText={errors.identifier || "Sign in with your username or email address"}
+                  variant="outlined"
+                  className="bg-white/5 backdrop-blur-sm"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        {form.isEmail ? <Email className="text-white" /> : <Person className="text-white" />}
+                      </InputAdornment>
+                    ),
+                    sx: {
+                      height: '56px',
+                      color: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'white',
+                      },
+                    },
+                  }}
+                  InputLabelProps={{
+                    className: 'text-white',
+                    sx: {
+                      color: 'rgba(255, 255, 255, 0.7)',
+                    },
+                  }}
+                  placeholder="e.g., john_doe or john@example.com"
+                />
 
-            <PasswordInput
-              variant="default"
+                <TextField
+                  fullWidth
               label="Password"
-              placeholder="Your secure password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              mb="md"
-            />
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={handleChange('password')}
+                  required
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  variant="outlined"
+                  className="bg-white/5 backdrop-blur-sm"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock className="text-white" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    sx: {
+                      height: '56px',
+                      color: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'white',
+                      },
+                    },
+                  }}
+                  InputLabelProps={{
+                    className: 'text-white',
+                    sx: {
+                      color: 'rgba(255, 255, 255, 0.7)',
+                    },
+                  }}
+                />
 
-            <Button fullWidth loading={loginLoading || signUpLoading} onClick={handleSubmit} disabled={!isFormValid}>
-              {mode === 'signin' ? 'Sign In' : 'Sign Up'}
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  sx={{
+                    height: '56px',
+                    backgroundColor: 'rgba(59, 130, 246, 0.9)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(59, 130, 246, 1)',
+                    },
+                    textTransform: 'none',
+                    fontSize: '1.1rem',
+                    fontWeight: 600,
+                    marginTop: 2,
+                  }}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <CircularProgress size={24} className="text-white" />
+                  ) : (
+                    isSignUp ? 'Create Account' : 'Sign In'
+                  )}
             </Button>
 
-            <Divider my="lg" />
-
-            <Center>
-              <Group spacing="xs">
-                <Text size="sm">
-                  {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}
-                </Text>
-                <Anchor size="sm" onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}>
-                  {mode === 'signin' ? 'Sign up' : 'Sign in'}
-                </Anchor>
-              </Group>
-            </Center>
+                <Box className="text-center mt-4">
+                  <Typography
+                    variant="body2"
+                    className="text-gray-300"
+                  >
+                    {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSignUp(!isSignUp);
+                        setErrors({});
+                        setForm({
+                          identifier: '',
+                          password: '',
+                          name: '',
+                          isEmail: false,
+                        });
+                      }}
+                      className="text-blue-300 hover:text-blue-200 font-semibold transition-colors"
+                    >
+                      {isSignUp ? 'Sign In' : 'Sign Up'}
+                    </button>
+                  </Typography>
+                </Box>
+              </Stack>
+            </Box>
+          </Stack>
           </Paper>
-        )}
-      </Transition>
     </Container>
+    </div>
   );
-}
+};
+
+export default AuthPage;

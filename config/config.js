@@ -16,7 +16,9 @@ const config = {
       mediaMetadata: '/api/v1/media-metadata',
       resendEmail: '/api/v1/auth/resend-verification',
       verifyEmail: '/api/v1/auth/verify-email',
-      refreshToken: '/api/v1/auth/refresh-token'
+      refreshToken: '/api/v1/auth/refresh-token',
+      blog: '/api/v1/blogs',
+      userProfile: '/api/v1/user/me'
     },
   };
   

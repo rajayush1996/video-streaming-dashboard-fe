@@ -1,10 +1,13 @@
 // hooks/useVideoUploader.js;
-import { showNotification } from '@mantine/notifications';
+import { useState } from 'react';
+import { toast } from 'react-hot-toast';
 import config from '@config/config';
 import axios from '@utils/axios';
-import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react';
 
-export const useVideoUploader = () => {
+export function useVideoUploader() {
+  const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+
   const uploadThumbnail = async (file, fileName) => {
     const form = new FormData();
     form.append('fileName', fileName);
@@ -36,14 +39,14 @@ export const useVideoUploader = () => {
       formData.append('chunk', chunk);
 
       const res = await axios.post(config.endpoints.upload, formData);
-      if (onProgress) onProgress(Math.round(((i + 1) / totalChunks) * 100));
+      if (onProgress) {
+        setProgress(Math.round(((i + 1) / totalChunks) * 100));
+        onProgress(Math.round(((i + 1) / totalChunks) * 100));
+      }
       if(res.data.file) {
         return { file: res?.data?.file, url: res?.data?.url }
       }
     }
-    
-
-    // return `https://bunnycdn.example.com/videos/${fileName}`;
   };
 
   const uploadCompleteVideo = async ({
@@ -54,6 +57,9 @@ export const useVideoUploader = () => {
     video,
     onProgress,
   }) => {
+    setIsUploading(true);
+    setProgress(0);
+    
     const fileId = `vid-${Date.now()}`;
     const sanitizedTitle = title.replace(/\s+/g, '_');
     const thumbName = `${fileId}_thumb.jpg`;
@@ -71,24 +77,21 @@ export const useVideoUploader = () => {
         thumbnailId: thumbNailInfo?.file?.fileId,
       });
 
-      showNotification({
-        title: 'Success',
-        message: 'Video uploaded successfully!',
-        color: 'green',
-        icon:  <IconCircleCheck size={20} />,
-      });
-
+      toast.success('Video uploaded successfully!');
+      setIsUploading(false);
+      setProgress(0);
       return { thumbUrl: thumbNailInfo.url, videoUrl: videoInfo.url };
     } catch (err) {
-      showNotification({
-        title: 'Upload Failed',
-        message: err?.response?.data?.error || err.message,
-        color: 'red',
-        icon: <IconAlertCircle />,
-      });
+      setIsUploading(false);
+      setProgress(0);
+      toast.error(err?.response?.data?.error || err.message);
       throw err;
     }
   };
 
-  return { uploadCompleteVideo };
-};
+  return {
+    uploadCompleteVideo,
+    isUploading,
+    progress
+  };
+}

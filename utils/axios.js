@@ -23,7 +23,7 @@ function addRefreshSubscriber(callback) {
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (req) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
     // ✅ Only set auth header if token exists and it's not an auth route
     if (
@@ -55,7 +55,7 @@ axiosInstance.interceptors.response.use(
       (error.response?.status === 401 || error.response?.status === 403) &&
       !originalRequest._retry
     ) {
-      const refreshToken = Cookies.get('refresh_token');
+      const refreshToken = Cookies.get('refreshToken');
       if (!refreshToken) {
         window.location.href = '/signin';
         return Promise.reject(error);
@@ -84,15 +84,15 @@ axiosInstance.interceptors.response.use(
         
         const { accessToken } = res.data;
 
-        localStorage.setItem('auth_token', accessToken);
+        localStorage.setItem('accessToken', accessToken);
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         onRefreshed(accessToken);
 
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         console.error('Refresh token error:', refreshError);
-        localStorage.removeItem('auth_token');
-        Cookies.remove('refresh_token');
+        localStorage.removeItem('accessToken');
+        Cookies.remove('refreshToken');
         window.location.href = '/signin';
         return Promise.reject(refreshError);
       } finally {

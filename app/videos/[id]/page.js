@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Container, Title, Text, Button, Loader, Center, Group, Badge } from '@mantine/core';
+import { 
+  Container,
+  Typography,
+  Button,
+  CircularProgress,
+  Box,
+  Chip,
+  Stack
+} from '@mui/material';
 import { IconArrowLeft, IconClock, IconEye } from '@tabler/icons-react';
 
 export default function VideoPlayerPage() {
@@ -19,14 +27,10 @@ export default function VideoPlayerPage() {
       
       // Try to get video data from URL parameters
       const videoDataParam = searchParams.get('data');
-      console.log("🚀 ~ useEffect ~ videoDataParam:", videoDataParam);
       
       if (videoDataParam) {
         // Parse the video data from the URL
         const videoData = JSON.parse(decodeURIComponent(videoDataParam));
-        console.log('Video data:', videoData); // Debug log
-        console.log('Video URL:', videoData.mediaFileUrl); // Debug log for URL
-        console.log('Video thumbnail:', videoData.thumbnail); // Debug log for thumbnail
         setVideo(videoData);
         setLoading(false);
       } else {
@@ -43,90 +47,102 @@ export default function VideoPlayerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+      <Box className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
         <Container>
-          <Center className="h-screen">
-            <div className="flex flex-col items-center space-y-4">
-              <Loader size="xl" color="white" />
-              <Text className="text-white text-lg">Loading video...</Text>
-            </div>
-          </Center>
+          <Box display="flex" alignItems="center" justifyContent="center" minHeight="100vh">
+            <Stack spacing={2} alignItems="center">
+              <CircularProgress size={48} />
+              <Typography variant="h6" color="white">
+                Loading video...
+              </Typography>
+            </Stack>
+          </Box>
         </Container>
-      </div>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+      <Box className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
         <Container>
-          <Center className="h-screen">
-            <div className="bg-red-500/10 p-8 rounded-lg border border-red-500/20">
-              <Text className="text-red-400 text-lg">{error}</Text>
-            </div>
-          </Center>
+          <Box display="flex" alignItems="center" justifyContent="center" minHeight="100vh">
+            <Box className="bg-red-500/10 p-8 rounded-lg border border-red-500/20">
+              <Typography color="error" variant="h6">
+                {error}
+              </Typography>
+            </Box>
+          </Box>
         </Container>
-      </div>
+      </Box>
     );
   }
 
   if (!video) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+      <Box className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
         <Container>
-          <Center className="h-screen">
-            <div className="bg-gray-800/50 p-8 rounded-lg border border-gray-700/20">
-              <Text className="text-gray-400 text-lg">Video not found</Text>
-            </div>
-          </Center>
+          <Box display="flex" alignItems="center" justifyContent="center" minHeight="100vh">
+            <Box className="bg-gray-800/50 p-8 rounded-lg border border-gray-700/20">
+              <Typography color="text.secondary" variant="h6">
+                Video not found
+              </Typography>
+            </Box>
+          </Box>
         </Container>
-      </div>
+      </Box>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-      <Container size="lg" className="py-8">
+    <Box className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Back Button */}
         <Button
-          leftIcon={<IconArrowLeft size={16} />}
-          variant="subtle"
+          startIcon={<IconArrowLeft size={16} />}
           onClick={() => router.back()}
-          className="mb-6 text-gray-400 hover:text-white transition-colors duration-200"
+          sx={{ 
+            mb: 3,
+            color: 'text.secondary',
+            '&:hover': { color: 'white' }
+          }}
         >
           Back to Videos
         </Button>
 
         {/* Video Title and Metadata */}
-        <div className="mb-6">
-          <Title order={1} className="text-white mb-4 text-3xl font-bold">
+        <Box mb={3}>
+          <Typography variant="h4" component="h1" color="white" gutterBottom fontWeight="bold">
             {video.title}
-          </Title>
+          </Typography>
           
-          <Group className="mb-4">
-            <Badge 
-              color="blue" 
-              size="lg"
-              className="bg-blue-500/20 text-blue-400 border-blue-500/30"
-            >
-              {video.category}
-            </Badge>
-            <div className="flex items-center space-x-4 text-gray-400">
-              <div className="flex items-center space-x-1">
+          <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+            <Chip 
+              label={video.category}
+              color="primary"
+              variant="outlined"
+              size="small"
+            />
+            <Stack direction="row" spacing={2} color="text.secondary">
+              <Box display="flex" alignItems="center" gap={0.5}>
                 <IconClock size={16} />
-                <Text size="sm">{video.createdAt || 'Published'}</Text>
-              </div>
-              <div className="flex items-center space-x-1">
+                <Typography variant="body2">
+                  {video.createdAt || 'Published'}
+                </Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={0.5}>
                 <IconEye size={16} />
-                <Text size="sm">{video.views || '0'} views</Text>
-              </div>
-            </div>
-          </Group>
-        </div>
+                <Typography variant="body2">
+                  {video.views || '0'} views
+                </Typography>
+              </Box>
+            </Stack>
+          </Stack>
+        </Box>
 
         {/* Video Player */}
-        <div className="mb-8">
-          <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl">
+        <Box mb={4}>
+          <Box className="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl">
             <video
               controls
               autoPlay
@@ -136,19 +152,19 @@ export default function VideoPlayerPage() {
               <source src={video.mediaFileUrl} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
-          </div>
-        </div>
+          </Box>
+        </Box>
 
         {/* Description */}
-        <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/20">
-          <Title order={3} className="text-white mb-3">
+        <Box className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/20">
+          <Typography variant="h6" color="white" gutterBottom>
             Description
-          </Title>
-          <Text className="text-gray-400 leading-relaxed">
+          </Typography>
+          <Typography color="text.secondary" sx={{ lineHeight: 1.6 }}>
             {video.description || 'No description available.'}
-          </Text>
-        </div>
+          </Typography>
+        </Box>
       </Container>
-    </div>
+    </Box>
   );
 }
