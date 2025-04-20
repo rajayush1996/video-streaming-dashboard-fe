@@ -326,8 +326,8 @@ const AuthPage = () => {
                     variant="body2"
                     className="text-gray-300"
                   >
-                    {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-                    <button
+                    {/* {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '} */}
+                    {/* <button
                       type="button"
                       onClick={() => {
                         setIsSignUp(!isSignUp);
@@ -342,7 +342,7 @@ const AuthPage = () => {
                       className="text-blue-300 hover:text-blue-200 font-semibold transition-colors"
                     >
                       {isSignUp ? 'Sign In' : 'Sign Up'}
-                    </button>
+                    </button> */}
                   </Typography>
                 </Box>
               </Stack>

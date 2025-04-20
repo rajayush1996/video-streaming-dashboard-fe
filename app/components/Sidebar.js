@@ -1,12 +1,13 @@
 "use client";
 import { Drawer, List, ListItem, ListItemIcon, ListItemText, ListItemButton, Box, Typography, Divider, useTheme, useMediaQuery } from '@mui/material';
 import { useRouter, usePathname } from 'next/navigation';
-import { IconHome, IconVideo, IconBook, IconSettings, IconUsers, IconLogout } from '@tabler/icons-react';
+import { IconHome, IconVideo, IconBook, IconSettings, IconUsers, IconLogout, IconMovie } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 
 const menuItems = [
   { icon: IconHome, label: 'Dashboard', path: '/dashboard' },
   { icon: IconVideo, label: 'Video Management', path: '/videos' },
+  { icon: IconMovie, label: 'Reels', path: '/reels' },
   { icon: IconBook, label: 'Blog Management', path: '/blogs' },
   { icon: IconUsers, label: 'User Management', path: '/users' },
   { icon: IconSettings, label: 'Settings', path: '/settings' },

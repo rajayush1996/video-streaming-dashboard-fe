@@ -263,16 +263,17 @@ export default function VideoRowList({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <Stack spacing={2} alignItems="center" mt={4}>
+        <Box display="flex" justifyContent="center" mt={4}>
           <Pagination
             count={totalPages}
             page={currentPage}
-            onChange={(_, page) => onPageChange(page)}
+            onChange={(e, page) => onPageChange(page)}
             color="primary"
+            size="large"
             showFirstButton
             showLastButton
           />
-        </Stack>
+        </Box>
       )}
 
       {/* Edit Dialog */}

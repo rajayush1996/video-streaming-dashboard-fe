@@ -33,6 +33,8 @@ import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   Menu as MenuIcon,
+  Person as PersonIcon,
+  Videocam as ReelsIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
@@ -98,7 +100,9 @@ export default function DashboardLayout({ children }) {
   const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
     { text: 'Videos', icon: <VideoIcon />, path: '/videos' },
+    { text: 'Reels', icon: <ReelsIcon />, path: '/reels' },
     { text: 'Blogs', icon: <ArticleIcon />, path: '/blogs' },
+    { text: 'User Management', icon: <PersonIcon />, path: '/users' },
   ];
 
   const drawer = (
@@ -404,6 +408,7 @@ export default function DashboardLayout({ children }) {
 function getPageTitle() {
   const path = window.location.pathname;
   if (path.includes('/videos')) return 'Videos';
+  if (path.includes('/reels')) return 'Reels';
   if (path.includes('/blogs')) return 'Blogs';
   return 'Dashboard';
 } 

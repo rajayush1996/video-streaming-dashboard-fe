@@ -4,7 +4,7 @@ import config from '@config/config';
 
 export const useMediaMetadata = (options = {}) => {
   const {
-    skip = 0,
+    page = 1,
     limit = 10,
     category,
     searchQuery,
@@ -12,9 +12,9 @@ export const useMediaMetadata = (options = {}) => {
   } = options;
 
   return useQuery({
-    queryKey: ['mediaMetadata', skip, limit, category, searchQuery],
+    queryKey: ['mediaMetadata', page, limit, category, searchQuery],
     queryFn: async () => {
-      let url = `${config.endpoints.mediaMetadata}?skip=${skip}&limit=${limit}`;
+      let url = `${config.endpoints.mediaMetadata}?page=${page}&limit=${limit}`;
       
       if (category) {
         url += `&category=${encodeURIComponent(category)}`;
@@ -27,6 +27,7 @@ export const useMediaMetadata = (options = {}) => {
       const response = await axios.get(url);
       return response.data;
     },
+    keepPreviousData: true,
     ...restOptions
   });
 }; 

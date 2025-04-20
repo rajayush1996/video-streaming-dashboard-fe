@@ -18,7 +18,12 @@ const config = {
       verifyEmail: '/api/v1/auth/verify-email',
       refreshToken: '/api/v1/auth/refresh-token',
       blog: '/api/v1/blogs',
-      userProfile: '/api/v1/user/me'
+      userProfile: '/api/v1/user/me',
+      dashboard: '/api/v1/dashboard',
+      users: '/api/v1/users',
+      adminUsers: '/api/v1/admin/users',
+      reels: '/api/v1/reels',
+      reelsUpload: '/api/v1/reels/upload',
     },
   };
   

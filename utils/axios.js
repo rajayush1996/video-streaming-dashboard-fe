@@ -25,7 +25,7 @@ axiosInstance.interceptors.request.use(
   (req) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
-    // ✅ Only set auth header if token exists and it's not an auth route
+    // Only set auth header if token exists and it's not an auth route
     if (
       token &&
       !req.url.includes('/login') &&
@@ -35,7 +35,7 @@ axiosInstance.interceptors.request.use(
       req.headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // ✅ Conditionally set content type (skip for FormData)
+    // Conditionally set content type (skip for FormData)
     if (!(req.data instanceof FormData)) {
       req.headers['Content-Type'] = 'application/json';
     }
@@ -46,7 +46,7 @@ axiosInstance.interceptors.request.use(
 );
 
 // Response interceptor
-axiosInstance.interceptors.response.use(
+axiosInstance.interceptors.response.use( 
   (res) => res,
   async (error) => {
     const originalRequest = error.config;

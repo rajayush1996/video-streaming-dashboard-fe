@@ -22,7 +22,7 @@ export default function VideosPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const { data, isLoading, isError } = useMediaMetadata({
-    skip: (page - 1) * ITEMS_PER_PAGE,
+    page,
     limit: ITEMS_PER_PAGE,
     searchQuery,
     category: selectedCategory === 'all' ? '' : selectedCategory,

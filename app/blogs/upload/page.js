@@ -18,6 +18,8 @@ import {
   Grid,
   IconButton,
   InputAdornment,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -25,6 +27,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import { useCreateBlog } from '@hooks/useBlogs';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import * as blogsApi from '@apis/blogs/blogsApi';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -53,9 +56,11 @@ export default function BlogUploadPage() {
     category: '',
     content: '',
     thumbnail: null,
+    status: 'draft'
   });
   const [preview, setPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [publishImmediately, setPublishImmediately] = useState(false);
 
   const { mutate, isLoading, isError } = useCreateBlog();
 
@@ -77,22 +82,29 @@ export default function BlogUploadPage() {
     }
   };
 
+  const handleStatusChange = (event) => {
+    setPublishImmediately(event.target.checked);
+    setForm({
+      ...form,
+      status: event.target.checked ? 'published' : 'draft'
+    });
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!form.title || !form.description || !form.category || !form.content || !form.thumbnail) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-
     try {
-      setIsUploading(true);
-      const formData = new FormData();
-      Object.keys(form).forEach(key => {
-        formData.append(key, form[key]);
-      });
+    e.preventDefault();
+    console.log("🚀 ~ handleSubmit ~ return:");
+    // if (!form.title || !form.description || !form.category || !form.content || !form.thumbnail) {
+    //   toast.error('Please fill in all fields');
+    //   return;
+    // }
 
-      await mutate(formData);
+    console.log("🚀 ~ handleSubmit ~ return:");
+
+    
+      setIsUploading(true);
+      
+      await blogsApi.createBlog(form);
       
       // Reset form
       setForm({
@@ -101,6 +113,7 @@ export default function BlogUploadPage() {
         category: '',
         content: '',
         thumbnail: null,
+        
       });
       setPreview(null);
       
@@ -120,7 +133,7 @@ export default function BlogUploadPage() {
           Create New Blog
         </Typography>
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+        <Box component="form" sx={{ mt: 3 }} onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             {/* Title */}
             <Grid item xs={12}>
@@ -213,6 +226,29 @@ export default function BlogUploadPage() {
               )}
             </Grid>
 
+            {/* Status */}
+            <Grid item xs={12} sx={{ my: 2 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={publishImmediately}
+                    onChange={handleStatusChange}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    {publishImmediately ? "Publish immediately" : "Save as draft"}
+                  </Typography>
+                }
+              />
+              <Typography variant="caption" color="text.secondary" display="block">
+                {publishImmediately 
+                  ? "Your blog will be published immediately after creation." 
+                  : "Your blog will be saved as a draft and can be published later."}
+              </Typography>
+            </Grid>
+
             {/* Submit Button */}
             <Grid item xs={12}>
               <Button
@@ -223,6 +259,7 @@ export default function BlogUploadPage() {
                 size="large"
                 disabled={isLoading || isUploading}
                 startIcon={isLoading || isUploading ? <CircularProgress size={20} /> : null}
+                onClick={handleSubmit}
               >
                 {isLoading || isUploading ? 'Creating...' : 'Create Blog'}
               </Button>
