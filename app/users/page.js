@@ -467,7 +467,7 @@ export default function UsersPage() {
                 users.map((user) => (
                   <StyledTableRow key={user.id}>
                     <TableCell>
-                      {user.firstName} {user.lastName}
+                      {user.firstName} {user.lastName} 
                       {user.deletedAt && (
                         <Chip
                           label="Deleted"
@@ -477,7 +477,7 @@ export default function UsersPage() {
                         />
                       )}
                     </TableCell>
-                    <TableCell>{user.username}</TableCell>
+                    <TableCell>{user.username || user.email}</TableCell>
                     <TableCell>
                       <Chip 
                         label={user.isActive ? 'Active' : 'Inactive'} 
