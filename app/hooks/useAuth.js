@@ -3,7 +3,8 @@
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { login, logout, signUp } from '@apis/auth/authApi';
-import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
+import toast from 'react-hot-toast';
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'accessToken';
@@ -13,7 +14,8 @@ const USER_DATA_KEY = 'userData';
 // Token storage helpers
 const setTokens = (accessToken, refreshToken) => {
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  Cookies.set(REFRESH_TOKEN_KEY, refreshToken, { path: '/' });
+
 };
 
 const clearTokens = () => {
@@ -52,7 +54,7 @@ export const useLogin = () => {
         });
 
         // Use replace instead of push to prevent back navigation
-        router.replace('/videos');
+        router.replace('/');
       } else {
         clearTokens();
         toast.error('Login failed: Invalid response format', {

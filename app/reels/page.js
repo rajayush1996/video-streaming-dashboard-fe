@@ -31,6 +31,7 @@ import { useReels, useDeleteReel } from '@hooks/useReels';
 import DashboardLayout from '@/components/DashboardLayout';
 import NoData from '@/components/NoData';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+import { useCategoriesByType } from '@/hooks/useCategories';
 
 function ReelsPage() {
   const router = useRouter();
@@ -41,8 +42,10 @@ function ReelsPage() {
   const [category, setCategory] = useState('');
 
   const { data: response, isLoading, refetch } = useReels({ page, limit, search, category });
+  const { data: categories = [] } = useCategoriesByType('reels');
   const deleteReelMutation = useDeleteReel();
   const data = response?.data;
+
   useEffect(() => {
     refetch();
   }, [page, limit, search, category, refetch]);
@@ -95,7 +98,7 @@ function ReelsPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: '60vh', // Adjust height as needed
+            height: '60vh',
             textAlign: 'center',
           }}
         >
@@ -124,7 +127,7 @@ function ReelsPage() {
                 component="div"
                 sx={{
                   position: 'relative',
-                  pt: '177.78%', // 16:9 aspect ratio (vertical for reels)
+                  pt: '177.78%',
                   cursor: 'pointer',
                 }}
                 onClick={() => handleViewReel(reel.id)}
@@ -220,13 +223,9 @@ function ReelsPage() {
                 onChange={handleCategoryChange}
               >
                 <MenuItem value="">All Categories</MenuItem>
-                <MenuItem value="entertainment">Entertainment</MenuItem>
-                <MenuItem value="education">Education</MenuItem>
-                <MenuItem value="sports">Sports</MenuItem>
-                <MenuItem value="lifestyle">Lifestyle</MenuItem>
-                <MenuItem value="food">Food</MenuItem>
-                <MenuItem value="travel">Travel</MenuItem>
-                <MenuItem value="other">Other</MenuItem>
+                {categories?.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>

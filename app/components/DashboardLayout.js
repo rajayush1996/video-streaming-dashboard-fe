@@ -36,6 +36,7 @@ import {
   Person as PersonIcon,
   Videocam as ReelsIcon,
 } from '@mui/icons-material';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const drawerWidth = 240;
 
@@ -103,7 +104,8 @@ export default function DashboardLayout({ children }) {
     { text: 'Reels', icon: <ReelsIcon />, path: '/reels' },
     { text: 'Blogs', icon: <ArticleIcon />, path: '/blogs' },
     { text: 'User Management', icon: <PersonIcon />, path: '/users' },
-  ];
+    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+  ]
 
   const drawer = (
     <div className="relative h-full bg-[#1a1c37]">

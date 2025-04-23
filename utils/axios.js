@@ -20,6 +20,13 @@ function addRefreshSubscriber(callback) {
   refreshSubscribers.push(callback);
 }
 
+function clearTokens() {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  Cookies.remove('refreshToken');
+  localStorage.removeItem('userData');
+}
+
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (req) => {
@@ -55,8 +62,9 @@ axiosInstance.interceptors.response.use(
       (error.response?.status === 401 || error.response?.status === 403) &&
       !originalRequest._retry
     ) {
-      const refreshToken = Cookies.get('refreshToken');
+      const refreshToken = Cookies.get('refreshToken') || localStorage.getItem('refreshToken');
       if (!refreshToken) {
+        clearTokens();
         window.location.href = '/signin';
         return Promise.reject(error);
       }
@@ -74,25 +82,19 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Use the refresh token endpoint from config or fallback to a default
         const refreshEndpoint = config.endpoints.refreshToken || '/api/v1/auth/refresh-token';
-        
-        // Use POST method for refresh token request
-        const res = await axios.post(`${config.apiBaseUrl}${refreshEndpoint}`, {
-          refreshToken: refreshToken
-        });
-        
-        const { accessToken } = res.data;
 
-        localStorage.setItem('accessToken', accessToken);
+        const rawAxios = axios.create({ withCredentials: true });
+        const response = await rawAxios.get(`${config.apiBaseUrl}${refreshEndpoint}`);
+      
+        const { accessToken, refreshToken: newRefresh } = response.data;
+      
+        setTokens({ accessToken, refreshToken: newRefresh });
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         onRefreshed(accessToken);
-
-        return axiosInstance(originalRequest);
       } catch (refreshError) {
-        console.error('Refresh token error:', refreshError);
-        localStorage.removeItem('accessToken');
-        Cookies.remove('refreshToken');
+        console.error('[Axios Refresh Error]', refreshError);
+        clearTokens();
         window.location.href = '/signin';
         return Promise.reject(refreshError);
       } finally {

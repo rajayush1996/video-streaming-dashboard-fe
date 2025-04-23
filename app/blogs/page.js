@@ -1,131 +1,61 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Button,
   Box,
-  TextField,
-  InputAdornment,
-  IconButton,
+  Button,
   Chip,
   CircularProgress,
-  Pagination,
-  Stack,
+  Container,
+  FormControl,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
   Paper,
-  Alert,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import PublishIcon from "@mui/icons-material/Publish";
-import { useBlogs } from "@hooks/useBlogs";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import axiosInstance from "@utils/axios";
-import config from "@config/config";
-import { useQueryClient } from "@tanstack/react-query";
+  Pagination,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
+import { useBlogs } from '@/hooks/useBlogs';
+import { useCategoriesByType } from '@/hooks/useCategories';
+import { toast } from 'react-toastify';
 
 const ITEMS_PER_PAGE = 6;
 
 export default function BlogsPage() {
   const router = useRouter();
   const [page, setPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
-  const { data, isLoading, isError } = useBlogs({
+  const { data: blogsData, isLoading, isError } = useBlogs({
     page,
     limit: ITEMS_PER_PAGE,
     searchQuery,
     category: selectedCategory,
   });
 
+  const { data: categories = [] } = useCategoriesByType('blogs');
+
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setPage(1); // Reset to first page on new search
+    setPage(1);
   };
 
-  const handleCategoryChange = (category) => {
-    setSelectedCategory(category);
-    setPage(1); // Reset to first page on category change
-  };
-
-  const handleEdit = (blog) => {
-    const encodedData = encodeURIComponent(JSON.stringify(blog));
-    router.push(`/blogs/${blog._id}/edit?data=${encodedData}`);
-  };
-  
-
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this blog?")) {
-      try {
-        // Implement delete functionality
-        toast.success("Blog deleted successfully");
-      } catch (error) {
-        toast.error("Failed to delete blog");
-      }
-    }
-  };
-
-  const handlePublish = async (id) => {
-    if (window.confirm("Are you sure you want to publish this blog?")) {
-      try {
-        // Use axios directly instead of hooks
-        await axiosInstance.patch(`${config.endpoints.blog}/${id}/publish`);
-        
-        // Refresh data by refetching
-        await queryClient.invalidateQueries({ queryKey: ['blogs'] });
-        
-        toast.success("Blog published successfully");
-      } catch (error) {
-        console.error("Publish error:", error);
-        toast.error(error.response?.data?.message || "Failed to publish blog");
-      }
-    }
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
+    setPage(1);
   };
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
-
-  const categories = [
-    { value: "technology", label: "Technology" },
-    { value: "business", label: "Business" },
-    { value: "lifestyle", label: "Lifestyle" },
-    { value: "education", label: "Education" },
-  ];
-
-  if (isLoading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="60vh"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (isError) {
-    return (
-      <Container>
-        <Alert severity="error">
-          Failed to load blogs. Please try again later.
-        </Alert>
-      </Container>
-    );
-  }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -143,7 +73,7 @@ export default function BlogsPage() {
             variant="contained"
             color="primary"
             startIcon={<AddIcon />}
-            onClick={() => router.push("/blogs/upload")}
+            onClick={() => router.push('/blogs/upload')}
           >
             Create Blog
           </Button>
@@ -167,160 +97,68 @@ export default function BlogsPage() {
         </Box>
 
         <Box mb={3}>
-          <Stack direction="row" spacing={1}>
-            <Chip
-              label="All"
-              onClick={() => handleCategoryChange("")}
-              color={selectedCategory === "" ? "primary" : "default"}
-            />
-            {categories.map((category) => (
-              <Chip
-                key={category.value}
-                label={category.label}
-                onClick={() => handleCategoryChange(category.value)}
-                color={
-                  selectedCategory === category.value ? "primary" : "default"
-                }
-              />
-            ))}
-          </Stack>
+          <FormControl fullWidth size="small">
+            <InputLabel>Category</InputLabel>
+            <Select
+              value={selectedCategory}
+              label="Category"
+              onChange={handleCategoryChange}
+            >
+              <MenuItem value="">All Categories</MenuItem>
+              {categories.map((cat) => (
+                <MenuItem key={cat.id} value={cat.id}>
+                  {cat.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Box>
 
-        <Grid container spacing={3}>
-          {data?.results?.map((blog) => (
-            <Grid item xs={12} sm={6} md={4} key={blog._id}>
-              <Card
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  bgcolor: "#1e293b",
-                  color: "white",
-                  borderRadius: 2,
-                  boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
-                  p: 2,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
-                    transform: "translateY(-2px)",
-                  },
-                }}
-              >
-                {blog.thumbnailUrl && (
-                  <CardMedia
-                    component="img"
-                    height="180"
-                    image={blog.thumbnailUrl}
-                    alt={blog.title}
-                    sx={{ objectFit: "cover", borderRadius: 1, mb: 2 }}
-                  />
-                )}
-
-                <CardContent
-                  sx={{
-                    flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    p: 0,
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    fontWeight="bold"
-                    gutterBottom
-                    noWrap
-                  >
-                    {blog.title}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    color="gray"
+        {isLoading ? (
+          <Box display="flex" justifyContent="center" minHeight="40vh">
+            <CircularProgress />
+          </Box>
+        ) : isError ? (
+          <Typography color="error">Failed to load blogs.</Typography>
+        ) : (
+          <>
+            <Grid container spacing={3}>
+              {blogsData?.results?.map((blog) => (
+                <Grid item xs={12} sm={6} md={4} key={blog._id}>
+                  <Box
+                    p={2}
                     sx={{
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      mb: 1,
+                      bgcolor: '#1e293b',
+                      color: 'white',
+                      borderRadius: 2,
+                      boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
                     }}
                   >
-                    {blog.description || "No description available."}
-                  </Typography>
-
-                  <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-                    {blog.category && (
-                      <Chip
-                        label={blog.category}
-                        size="small"
-                        color="primary"
-                      />
-                    )}
-                    <Chip
-                      label={blog.status}
-                      size="small"
-                      variant="outlined"
-                      color={blog.status === "draft" ? "warning" : "success"}
-                    />
-                  </Stack>
-
-                  <Box mb={2}>
-                    <Typography variant="caption" color="gray" display="block">
-                      <strong>Issued on:</strong>{" "}
-                      {new Date(blog.createdAt).toLocaleString()}
+                    <Typography variant="h6" gutterBottom noWrap>
+                      {blog.title}
                     </Typography>
-                    <Typography variant="caption" color="gray" display="block">
-                      <strong>Last modified:</strong>{" "}
-                      {new Date(blog.updatedAt).toLocaleString()}
+                    <Typography variant="body2" color="gray">
+                      {blog.description || 'No description'}
                     </Typography>
                   </Box>
-
-                  <Box mt="auto" display="flex" justifyContent="space-between">
-                    {blog.status === 'draft' && (
-                      <Button
-                        size="small"
-                        color="success"
-                        startIcon={<PublishIcon />}
-                        onClick={() => handlePublish(blog._id)}
-                      >
-                        Publish
-                      </Button>
-                    )}
-                    <Button
-                      size="small"
-                      startIcon={<EditIcon />}
-                      onClick={() => handleEdit(blog)}
-                      sx={{ color: "#90caf9" }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="small"
-                      color="error"
-                      startIcon={<DeleteIcon />}
-                      onClick={() => handleDelete(blog._id)}
-                    >
-                      Delete
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
 
-        <Box display="flex" justifyContent="center" mt={4}>
-          {data?.totalPages > 0 && (
-            <Pagination 
-              count={data.totalPages}
-              page={page}
-              onChange={handlePageChange}
-              color="primary"
-              size="large"
-              showFirstButton
-              showLastButton
-            />
-          )}
-        </Box>
+            <Box display="flex" justifyContent="center" mt={4}>
+              {blogsData?.totalPages > 0 && (
+                <Pagination
+                  count={blogsData.totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                  showFirstButton
+                  showLastButton
+                />
+              )}
+            </Box>
+          </>
+        )}
       </Paper>
     </Container>
   );

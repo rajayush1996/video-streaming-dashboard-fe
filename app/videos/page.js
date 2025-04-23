@@ -1,9 +1,10 @@
-'use client'
+'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CircularProgress, Box, Container, Typography } from '@mui/material';
 import { useMediaMetadata } from '@hooks/useMediaMetadata';
+import { useCategoriesByType } from '@/hooks/useCategories';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
 import {
@@ -19,14 +20,17 @@ export default function VideosPage() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   const { data, isLoading, isError } = useMediaMetadata({
     page,
     limit: ITEMS_PER_PAGE,
     searchQuery,
-    category: selectedCategory === 'all' ? '' : selectedCategory,
+    category: selectedCategory,
   });
+
+  const { data: categoryResponse } = useCategoriesByType('videos');
+  const categories = categoryResponse || [];
 
   const deleteVideo = useDeleteVideo();
   const updateVideo = useUpdateVideo();
@@ -36,8 +40,8 @@ export default function VideosPage() {
     setPage(1);
   };
 
-  const handleCategoryChange = (category) => {
-    setSelectedCategory(category.toLowerCase());
+  const handleCategoryChange = (catId) => {
+    setSelectedCategory(catId);
     setPage(1);
   };
 
@@ -59,14 +63,6 @@ export default function VideosPage() {
     }
   };
 
-  const categories = [
-    { value: 'all', label: 'All' },
-    { value: 'technology', label: 'Technology' },
-    { value: 'business', label: 'Business' },
-    { value: 'lifestyle', label: 'Lifestyle' },
-    { value: 'education', label: 'Education' },
-  ];
-
   const totalPages = data?.totalPages || 1;
 
   if (isError) {
@@ -81,7 +77,6 @@ export default function VideosPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Header Section */}
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" component="h1" fontWeight="bold">
           Videos
@@ -95,7 +90,6 @@ export default function VideosPage() {
         </Link>
       </Box>
 
-      {/* Search and Filter Section */}
       <Box sx={{ mb: 4, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
         <Box sx={{ mb: 3 }}>
           <Box sx={{ position: 'relative' }}>
@@ -119,25 +113,29 @@ export default function VideosPage() {
           </Box>
         </Box>
 
-        {/* Categories */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {categories.map(({ value, label }) => (
+          <button
+            onClick={() => handleCategoryChange('')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+              selectedCategory === '' ? 'bg-blue-600 text-white' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+            }`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
             <button
-              key={value}
-              onClick={() => handleCategoryChange(value)}
+              key={cat.id}
+              onClick={() => handleCategoryChange(cat.id)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                selectedCategory === value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
+                selectedCategory === cat.id ? 'bg-blue-600 text-white' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
               }`}
             >
-              {label}
+              {cat.name}
             </button>
           ))}
         </Box>
       </Box>
 
-      {/* Video Table */}
       <VideoTable
         videos={data?.results || []}
         onDelete={handleDelete}
