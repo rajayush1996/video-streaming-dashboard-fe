@@ -37,7 +37,7 @@ export const useCategoriesByType = (type) => {
         return response.data?.data || [];
       },
       enabled: !!type, // only fetch when type is provided
-      staleTime: 5 * 60 * 1000, // cache for 5 minutes
+      refetchOnMount: 'always'
     });
   };
 

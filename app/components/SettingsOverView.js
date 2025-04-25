@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import {
   Box,
@@ -15,7 +17,12 @@ import {
   Stack,
   TextField,
   Typography,
+  IconButton,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import toast from "react-hot-toast";
+
 import {
   useCategoryTreeByType,
   useCreateCategory,
@@ -23,44 +30,57 @@ import {
   useUpdateCategory,
   useDeleteCategory,
 } from "@/hooks/useCategories";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import toast from "react-hot-toast";
 
 const categoryTypes = ["videos", "reels", "blogs"];
 
 export default function SettingsOverview() {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", type: "", parentId: "", id: null });
+  const [form, setForm] = useState({
+    name: "",
+    type: "",
+    parentId: "", // always set to string, not undefined or null
+    id: null,
+  });
   const [editMode, setEditMode] = useState(false);
 
   const { mutate: createCategory } = useCreateCategory();
-  const { data: allCategories = [] } = useAllCategories({ type: form.type });
+  const { data: allCategoriesData = {} } = useAllCategories({
+    type: form.type,
+    enabled: !!form.type, // only fetch when type exists
+  });
+
+  const allCategories = allCategoriesData?.data?.results || [];
+
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
 
-
   const handleChange = (e) => {
+    console.log("🚀 ~ handleChange ~ e.target.value:", e.target.value);
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleParentChange = (e) => {
+    const { name, value } = e.target;
+    console.log("🚀 ~ handleParentChange ~ e.target:", e.target);
+    setForm((prev) => ({ ...prev, [name]: value ?? "" }));
   };
 
   const handleEditCategory = (category) => {
     setForm({
       name: category.name,
       type: category.type,
-      parentId: category.parentId || '',
-      id: category._id
+      parentId: category.parentId || "",
+      id: category._id,
     });
     setEditMode(true);
     setOpen(true);
   };
 
   const handleDeleteCategory = (id) => {
-    if (window.confirm('Are you sure you want to delete this category?')) {
+    if (window.confirm("Are you sure you want to delete this category?")) {
       deleteCategory.mutate(id, {
-        onSuccess: () => toast.success('Category deleted successfully!'),
-        onError: () => toast.error('Failed to delete category'),
+        onSuccess: () => toast.success("Category deleted successfully!"),
+        onError: () => toast.error("Failed to delete category"),
       });
     }
   };
@@ -71,19 +91,19 @@ export default function SettingsOverview() {
       type: form.type,
       parentId: form.parentId || null,
     };
-  
+
     if (editMode && form.id) {
       updateCategory.mutate(
         { id: form.id, payload },
         {
           onSuccess: () => {
-            toast.success('Category updated successfully!');
+            toast.success("Category updated successfully!");
             setOpen(false);
             setForm({ name: "", type: "", parentId: "", id: null });
             setEditMode(false);
           },
           onError: () => {
-            toast.error('Failed to update category');
+            toast.error("Failed to update category");
           },
         }
       );
@@ -100,9 +120,6 @@ export default function SettingsOverview() {
       });
     }
   };
-  
-
-  
 
   const renderFullTree = (category, level = 0) => (
     <Box key={category._id} position="relative" ml={level * 3} mt={1}>
@@ -162,16 +179,11 @@ export default function SettingsOverview() {
             </Box>
           }
           sx={{
-            backgroundColor: "#0ea5e9", // Tailwind's sky-500
+            backgroundColor: "#0ea5e9",
             color: "white",
             borderRadius: "12px",
             px: 2,
             py: 1,
-            "& .MuiChip-label": {
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            },
           }}
         />
       </Box>
@@ -188,9 +200,6 @@ export default function SettingsOverview() {
 
       <Box mb={4}>
         <Typography variant="h6">General Settings</Typography>
-        {/* <TextField label="Site Title" fullWidth margin="normal" defaultValue="My Social Platform" />
-        <TextField label="Support Email" fullWidth margin="normal" defaultValue="support@example.com" />
-        <TextField label="Default Language" fullWidth margin="normal" defaultValue="en" /> */}
         <Typography variant="body1" color="textSecondary" gutterBottom>
           Coming Soon...
         </Typography>
@@ -214,7 +223,6 @@ export default function SettingsOverview() {
         {categoryTypes.map((type) => {
           const { data: treeData = [], isLoading } =
             useCategoryTreeByType(type);
-
           return (
             <Box key={type} mb={4}>
               <Typography
@@ -224,7 +232,6 @@ export default function SettingsOverview() {
               >
                 {type.toUpperCase()}
               </Typography>
-
               {isLoading ? (
                 <Typography variant="body2">Loading...</Typography>
               ) : (
@@ -248,12 +255,12 @@ export default function SettingsOverview() {
         <Typography variant="body1" color="textSecondary" gutterBottom>
           Coming Soon...
         </Typography>
-        {/* <TextField label="Custom Footer Text" fullWidth margin="normal" />
-        <TextField label="Contact Phone" fullWidth margin="normal" /> */}
       </Box>
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth>
-        <DialogTitle>Create Category</DialogTitle>
+        <DialogTitle>
+          {editMode ? "Edit Category" : "Create Category"}
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={2} mt={1}>
             <TextField
@@ -265,7 +272,12 @@ export default function SettingsOverview() {
             />
             <FormControl fullWidth>
               <InputLabel>Type</InputLabel>
-              <Select name="type" value={form.type} onChange={handleChange}>
+              <Select
+                name="type"
+                label="Type"
+                value={form.type || ""} // fallback to empty string
+                onChange={handleChange}
+              >
                 {categoryTypes.map((type) => (
                   <MenuItem key={type} value={type}>
                     {type.toUpperCase()}
@@ -277,14 +289,15 @@ export default function SettingsOverview() {
               <InputLabel>Parent Category</InputLabel>
               <Select
                 name="parentId"
-                value={form.parentId}
-                onChange={handleChange}
+                label="Parent Category"
+                value={form.parentId || ""} // avoid undefined
+                onChange={handleParentChange}
               >
                 <MenuItem value="">None</MenuItem>
-                {allCategories?.docs
-                  ?.filter((cat) => cat.type === form.type)
+                {allCategories
+                  .filter((cat) => cat.type === form.type) // ✅ filter only same type
                   .map((cat) => (
-                    <MenuItem key={cat._id} value={cat._id}>
+                    <MenuItem key={cat.id || cat._id} value={cat.id || cat._id}>
                       {cat.name}
                     </MenuItem>
                   ))}
@@ -295,7 +308,7 @@ export default function SettingsOverview() {
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleCreate}>
-            {editMode && form.id ? "Update" : "Create"}
+            {editMode ? "Update" : "Create"}
           </Button>
         </DialogActions>
       </Dialog>
