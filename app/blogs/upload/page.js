@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Box,
   Container,
@@ -20,43 +20,37 @@ import {
   InputAdornment,
   Switch,
   FormControlLabel,
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import ImageIcon from '@mui/icons-material/Image';
-import { useCreateBlog } from '@hooks/useBlogs';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import * as blogsApi from '@apis/blogs/blogsApi';
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import ImageIcon from "@mui/icons-material/Image";
+import { useCreateBlog } from "@hooks/useBlogs";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import * as blogsApi from "@apis/blogs/blogsApi";
+import { useCategoriesByType } from "@/hooks/useCategories";
 
-const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
   height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
+  overflow: "hidden",
+  position: "absolute",
   bottom: 0,
   left: 0,
-  whiteSpace: 'nowrap',
+  whiteSpace: "nowrap",
   width: 1,
 });
-
-const categories = [
-  { value: 'technology', label: 'Technology' },
-  { value: 'business', label: 'Business' },
-  { value: 'lifestyle', label: 'Lifestyle' },
-  { value: 'education', label: 'Education' },
-];
 
 export default function BlogUploadPage() {
   const router = useRouter();
   const [form, setForm] = useState({
-    title: '',
-    description: '',
-    category: '',
-    content: '',
+    title: "",
+    description: "",
+    category: "",
+    content: "",
     thumbnail: null,
-    status: 'draft'
+    status: "draft",
   });
   const [preview, setPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -72,7 +66,7 @@ export default function BlogUploadPage() {
     const file = e.target.files[0];
     if (file) {
       setForm({ ...form, thumbnail: file });
-      
+
       // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -82,45 +76,46 @@ export default function BlogUploadPage() {
     }
   };
 
+  const { data: categories = [] } = useCategoriesByType("blogs");
+  console.log("🚀 ~ UploadVideoPage ~ categories:", categories);
+
   const handleStatusChange = (event) => {
     setPublishImmediately(event.target.checked);
     setForm({
       ...form,
-      status: event.target.checked ? 'published' : 'draft'
+      status: event.target.checked ? "published" : "draft",
     });
   };
 
   const handleSubmit = async (e) => {
     try {
-    e.preventDefault();
-    console.log("🚀 ~ handleSubmit ~ return:");
-    // if (!form.title || !form.description || !form.category || !form.content || !form.thumbnail) {
-    //   toast.error('Please fill in all fields');
-    //   return;
-    // }
+      e.preventDefault();
+      console.log("🚀 ~ handleSubmit ~ return:");
+      // if (!form.title || !form.description || !form.category || !form.content || !form.thumbnail) {
+      //   toast.error('Please fill in all fields');
+      //   return;
+      // }
 
-    console.log("🚀 ~ handleSubmit ~ return:");
+      console.log("🚀 ~ handleSubmit ~ return:");
 
-    
       setIsUploading(true);
-      
+
       await blogsApi.createBlog(form);
-      
+
       // Reset form
       setForm({
-        title: '',
-        description: '',
-        category: '',
-        content: '',
+        title: "",
+        description: "",
+        category: "",
+        content: "",
         thumbnail: null,
-        
       });
       setPreview(null);
-      
-      toast.success('Blog created successfully!');
-      router.push('/blogs');
+
+      toast.success("Blog created successfully!");
+      router.push("/blogs");
     } catch (error) {
-      toast.error(error.message || 'Failed to create blog');
+      toast.error(error.message || "Failed to create blog");
     } finally {
       setIsUploading(false);
     }
@@ -129,7 +124,13 @@ export default function BlogUploadPage() {
   return (
     <Container maxWidth="md">
       <Paper elevation={3} sx={{ p: 4, mt: 4, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom align="center" color="primary">
+        <Typography
+          variant="h4"
+          component="h1"
+          gutterBottom
+          align="center"
+          color="primary"
+        >
           Create New Blog
         </Typography>
 
@@ -141,7 +142,7 @@ export default function BlogUploadPage() {
                 fullWidth
                 label="Title"
                 value={form.title}
-                onChange={handleChange('title')}
+                onChange={handleChange("title")}
                 required
                 variant="outlined"
                 InputProps={{
@@ -160,7 +161,7 @@ export default function BlogUploadPage() {
                 fullWidth
                 label="Description"
                 value={form.description}
-                onChange={handleChange('description')}
+                onChange={handleChange("description")}
                 required
                 multiline
                 rows={3}
@@ -174,12 +175,12 @@ export default function BlogUploadPage() {
                 <InputLabel>Category</InputLabel>
                 <Select
                   value={form.category}
-                  onChange={handleChange('category')}
+                  onChange={handleChange("category")}
                   label="Category"
                 >
-                  {categories.map((category) => (
-                    <MenuItem key={category.value} value={category.value}>
-                      {category.label}
+                  {categories.map((cat) => (
+                    <MenuItem key={cat.id} value={cat.id}>
+                      {cat.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -192,7 +193,7 @@ export default function BlogUploadPage() {
                 fullWidth
                 label="Content"
                 value={form.content}
-                onChange={handleChange('content')}
+                onChange={handleChange("content")}
                 required
                 multiline
                 rows={6}
@@ -216,11 +217,11 @@ export default function BlogUploadPage() {
                 />
               </Button>
               {preview && (
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Box sx={{ mt: 2, textAlign: "center" }}>
                   <img
                     src={preview}
                     alt="Thumbnail preview"
-                    style={{ maxWidth: '100%', maxHeight: 200 }}
+                    style={{ maxWidth: "100%", maxHeight: 200 }}
                   />
                 </Box>
               )}
@@ -238,13 +239,19 @@ export default function BlogUploadPage() {
                 }
                 label={
                   <Typography variant="body2">
-                    {publishImmediately ? "Publish immediately" : "Save as draft"}
+                    {publishImmediately
+                      ? "Publish immediately"
+                      : "Save as draft"}
                   </Typography>
                 }
               />
-              <Typography variant="caption" color="text.secondary" display="block">
-                {publishImmediately 
-                  ? "Your blog will be published immediately after creation." 
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
+                {publishImmediately
+                  ? "Your blog will be published immediately after creation."
                   : "Your blog will be saved as a draft and can be published later."}
               </Typography>
             </Grid>
@@ -258,10 +265,14 @@ export default function BlogUploadPage() {
                 fullWidth
                 size="large"
                 disabled={isLoading || isUploading}
-                startIcon={isLoading || isUploading ? <CircularProgress size={20} /> : null}
+                startIcon={
+                  isLoading || isUploading ? (
+                    <CircularProgress size={20} />
+                  ) : null
+                }
                 onClick={handleSubmit}
               >
-                {isLoading || isUploading ? 'Creating...' : 'Create Blog'}
+                {isLoading || isUploading ? "Creating..." : "Create Blog"}
               </Button>
             </Grid>
 

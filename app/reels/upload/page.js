@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Box,
@@ -15,35 +15,36 @@ import {
   TextField,
   Typography,
   IconButton,
-} from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ClearIcon from '@mui/icons-material/Clear';
-import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
-import { toast } from 'react-hot-toast';
-import DashboardLayout from '@/components/DashboardLayout';
-import { useUploadReelChunked } from '@/hooks/useReels';
+} from "@mui/material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ClearIcon from "@mui/icons-material/Clear";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
+import { toast } from "react-hot-toast";
+import DashboardLayout from "@/components/DashboardLayout";
+import { useUploadReelChunked } from "@/hooks/useReels";
+import { useCategoriesByType } from "@/hooks/useCategories";
 
 const ReelUploadPage = () => {
   const router = useRouter();
   const fileInputRef = useRef(null);
   const [formValues, setFormValues] = useState({
-    title: '',
-    description: '',
-    category: '',
+    title: "",
+    description: "",
+    category: "",
     tags: [],
   });
 
-  const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState("");
   const [videoFile, setVideoFile] = useState(null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
-  const [videoPreview, setVideoPreview] = useState('');
-  const [thumbnailPreview, setThumbnailPreview] = useState('');
+  const [videoPreview, setVideoPreview] = useState("");
+  const [thumbnailPreview, setThumbnailPreview] = useState("");
 
   const { uploadReel, isUploading, progress } = useUploadReelChunked();
 
-  const handleBack = () => router.push('/reels');
+  const handleBack = () => router.push("/reels");
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -57,7 +58,7 @@ const ReelUploadPage = () => {
         ...prev,
         tags: [...prev.tags, tag],
       }));
-      setTagInput('');
+      setTagInput("");
     }
   };
 
@@ -72,14 +73,19 @@ const ReelUploadPage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv'];
+    const validTypes = [
+      "video/mp4",
+      "video/quicktime",
+      "video/x-msvideo",
+      "video/x-ms-wmv",
+    ];
     if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a valid video file (MP4, MOV, AVI, WMV)');
+      toast.error("Please upload a valid video file (MP4, MOV, AVI, WMV)");
       return;
     }
 
     if (file.size > 100 * 1024 * 1024) {
-      toast.error('Video must be under 100MB');
+      toast.error("Video must be under 100MB");
       return;
     }
 
@@ -91,14 +97,14 @@ const ReelUploadPage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a valid image file (JPG, PNG, WEBP, GIF)');
+      toast.error("Please upload a valid image file (JPG, PNG, WEBP, GIF)");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Thumbnail must be under 5MB');
+      toast.error("Thumbnail must be under 5MB");
       return;
     }
 
@@ -110,23 +116,30 @@ const ReelUploadPage = () => {
     e.preventDefault();
 
     const { title, category } = formValues;
-    if (!title.trim()) return toast.error('Title is required');
-    if (!category) return toast.error('Category is required');
-    if (!videoFile) return toast.error('Video file is required');
-    if (!thumbnailFile) return toast.error('Thumbnail image is required');
+    if (!title.trim()) return toast.error("Title is required");
+    if (!category) return toast.error("Category is required");
+    if (!videoFile) return toast.error("Video file is required");
+    if (!thumbnailFile) return toast.error("Thumbnail image is required");
 
     uploadReel({
       ...formValues,
       video: videoFile,
       thumbnail: thumbnailFile,
-      onProgress: (p) => console.log('Uploading...', p),
+      onProgress: (p) => console.log("Uploading...", p),
     });
   };
+
+  const { data: categories = [] } = useCategoriesByType("reels");
+  console.log("🚀 ~ UploadVideoPage ~ categories:", categories);
 
   return (
     <DashboardLayout>
       <Box sx={{ mb: 4 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={handleBack} sx={{ mb: 2 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={handleBack}
+          sx={{ mb: 2 }}
+        >
           Back to Reels
         </Button>
 
@@ -139,7 +152,13 @@ const ReelUploadPage = () => {
             <Grid container spacing={4}>
               {/* Upload Section */}
               <Grid item xs={12} md={6}>
-                <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box
+                  sx={{
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
                   {/* Video Upload */}
                   <Typography variant="h6" sx={{ mb: 2 }}>
                     Upload Video
@@ -147,12 +166,12 @@ const ReelUploadPage = () => {
                   {!videoPreview ? (
                     <Box
                       sx={{
-                        border: '2px dashed #ccc',
+                        border: "2px dashed #ccc",
                         borderRadius: 2,
                         p: 3,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        '&:hover': { borderColor: 'primary.main' },
+                        textAlign: "center",
+                        cursor: "pointer",
+                        "&:hover": { borderColor: "primary.main" },
                       }}
                       onClick={() => fileInputRef.current?.click()}
                     >
@@ -160,29 +179,35 @@ const ReelUploadPage = () => {
                         type="file"
                         accept="video/*"
                         ref={fileInputRef}
-                        style={{ display: 'none' }}
+                        style={{ display: "none" }}
                         onChange={handleVideoChange}
                       />
-                      <CloudUploadIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+                      <CloudUploadIcon
+                        sx={{ fontSize: 60, color: "text.secondary", mb: 2 }}
+                      />
                       <Typography>Click or drag your reel here</Typography>
                       <Typography variant="caption" display="block" mt={1}>
                         Formats: MP4, MOV, AVI, WMV (Max 100MB)
                       </Typography>
                     </Box>
                   ) : (
-                    <Box sx={{ position: 'relative', mb: 2 }}>
-                      <video src={videoPreview} controls style={{ width: '100%', borderRadius: 8 }} />
+                    <Box sx={{ position: "relative", mb: 2 }}>
+                      <video
+                        src={videoPreview}
+                        controls
+                        style={{ width: "100%", borderRadius: 8 }}
+                      />
                       <IconButton
                         sx={{
-                          position: 'absolute',
+                          position: "absolute",
                           top: 10,
                           right: 10,
-                          bgcolor: 'rgba(0,0,0,0.5)',
-                          color: 'white',
+                          bgcolor: "rgba(0,0,0,0.5)",
+                          color: "white",
                         }}
                         onClick={() => {
                           setVideoFile(null);
-                          setVideoPreview('');
+                          setVideoPreview("");
                         }}
                       >
                         <ClearIcon />
@@ -196,17 +221,17 @@ const ReelUploadPage = () => {
                   </Typography>
                   <Box
                     sx={{
-                      border: '2px dashed #ccc',
+                      border: "2px dashed #ccc",
                       borderRadius: 2,
                       p: 3,
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      position: 'relative',
+                      textAlign: "center",
+                      cursor: "pointer",
+                      position: "relative",
                     }}
                     onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*';
+                      const input = document.createElement("input");
+                      input.type = "file";
+                      input.accept = "image/*";
                       input.onchange = handleThumbnailChange;
                       input.click();
                     }}
@@ -216,20 +241,24 @@ const ReelUploadPage = () => {
                         <img
                           src={thumbnailPreview}
                           alt="Thumbnail"
-                          style={{ width: '100%', maxHeight: 200, objectFit: 'contain' }}
+                          style={{
+                            width: "100%",
+                            maxHeight: 200,
+                            objectFit: "contain",
+                          }}
                         />
                         <IconButton
                           sx={{
-                            position: 'absolute',
+                            position: "absolute",
                             top: 10,
                             right: 10,
-                            bgcolor: 'rgba(0,0,0,0.5)',
-                            color: 'white',
+                            bgcolor: "rgba(0,0,0,0.5)",
+                            color: "white",
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
                             setThumbnailFile(null);
-                            setThumbnailPreview('');
+                            setThumbnailPreview("");
                           }}
                         >
                           <ClearIcon />
@@ -237,7 +266,9 @@ const ReelUploadPage = () => {
                       </>
                     ) : (
                       <>
-                        <CloudUploadIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
+                        <CloudUploadIcon
+                          sx={{ fontSize: 40, color: "text.secondary", mb: 1 }}
+                        />
                         <Typography>Click to upload thumbnail</Typography>
                       </>
                     )}
@@ -272,13 +303,11 @@ const ReelUploadPage = () => {
                       value={formValues.category}
                       onChange={handleFormChange}
                     >
-                      {['entertainment', 'education', 'sports', 'lifestyle', 'food', 'travel', 'other'].map(
-                        (cat) => (
-                          <MenuItem key={cat} value={cat}>
-                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                          </MenuItem>
-                        )
-                      )}
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
                     </Select>
                   </FormControl>
 
@@ -289,7 +318,7 @@ const ReelUploadPage = () => {
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
+                          if (e.key === "Enter") {
                             e.preventDefault();
                             handleAddTag();
                           }
@@ -297,13 +326,20 @@ const ReelUploadPage = () => {
                         fullWidth
                         size="small"
                       />
-                      <Button onClick={handleAddTag} disabled={!tagInput.trim()}>
+                      <Button
+                        onClick={handleAddTag}
+                        disabled={!tagInput.trim()}
+                      >
                         Add
                       </Button>
                     </Box>
                     <Box display="flex" flexWrap="wrap" gap={1}>
                       {formValues.tags.map((tag) => (
-                        <Chip key={tag} label={tag} onDelete={() => handleRemoveTag(tag)} />
+                        <Chip
+                          key={tag}
+                          label={tag}
+                          onDelete={() => handleRemoveTag(tag)}
+                        />
                       ))}
                     </Box>
                   </Box>
@@ -321,7 +357,7 @@ const ReelUploadPage = () => {
                         Uploading... {progress}%
                       </>
                     ) : (
-                      'Upload Reel'
+                      "Upload Reel"
                     )}
                   </Button>
                 </Stack>

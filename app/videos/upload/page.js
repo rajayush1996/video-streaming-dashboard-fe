@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useVideoUploader } from "@hooks/useVideoUploader";
 import { IconUpload, IconPhoto, IconVideo } from "@tabler/icons-react";
 import { toast } from "react-toastify";
+import { useCategoriesByType } from '@/hooks/useCategories';
+
 
 export default function UploadVideoPage() {
   const router = useRouter();
@@ -70,12 +72,9 @@ export default function UploadVideoPage() {
     }
   };
 
-  const categories = [
-    { value: 'technology', label: 'Technology' },
-    { value: 'business', label: 'Business' },
-    { value: 'lifestyle', label: 'Lifestyle' },
-    { value: 'education', label: 'Education' },
-  ];
+  const { data: categories = [] } = useCategoriesByType('videos');
+  console.log("🚀 ~ UploadVideoPage ~ categories:", categories);
+  
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -141,8 +140,8 @@ export default function UploadVideoPage() {
               className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               {categories.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
                 </option>
               ))}
             </select>
