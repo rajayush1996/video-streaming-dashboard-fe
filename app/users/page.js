@@ -333,7 +333,8 @@ export default function UsersPage() {
   }));
   
   // Use mock data until real API is integrated
-  const users = usersData?.results || mockUsers;
+  const users = usersData?.results;
+
   const totalUsers = usersData?.totalResults || 0;
   
   return (
@@ -467,7 +468,7 @@ export default function UsersPage() {
                 users.map((user) => (
                   <StyledTableRow key={user.id}>
                     <TableCell>
-                      {user.firstName} {user.lastName} 
+                      { user.name } 
                       {user.deletedAt && (
                         <Chip
                           label="Deleted"
@@ -480,8 +481,8 @@ export default function UsersPage() {
                     <TableCell>{user.username || user.email}</TableCell>
                     <TableCell>
                       <Chip 
-                        label={user.isActive ? 'Active' : 'Inactive'} 
-                        color={user.isActive ? 'success' : 'error'}
+                        label={user.status === 'active' ? 'Active' : 'Inactive'} 
+                        color={user.status === 'active' ? 'success' : 'error'}
                         size="small" 
                       />
                     </TableCell>
@@ -590,7 +591,7 @@ export default function UsersPage() {
                     {userDetail?.firstName?.charAt(0) || "U"}
                   </Avatar>
                   <Typography variant="h6">{userDetail?.firstName || "User Name"}</Typography>
-                  <Typography variant="body2" color="textSecondary">{userDetail?.email || "user@example.com"}</Typography>
+                  <Typography variant="body2" color="textSecondary">{userDetail?.email }</Typography>
                   <Box sx={{ mt: 2 }}>
                     <StatusChip status={userDetail?.isActive ? "Active" : "Inactive"} />
                   </Box>

@@ -12,9 +12,9 @@ const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_DATA_KEY = 'userData';
 
 // Token storage helpers
-const setTokens = (accessToken, refreshToken) => {
+const setTokens = (accessToken) => {
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  Cookies.set(REFRESH_TOKEN_KEY, refreshToken, { path: '/' });
+  // Cookies.set(REFRESH_TOKEN_KEY, refreshToken, { path: '/' });
 
 };
 
@@ -34,12 +34,12 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: login,
     onSuccess: (data) => {
-      if (data?.data?.token) {
-        const { accessToken, refreshToken } = data.data.token;
-        const userData = data.data.user;
+      if (data?.data?.accessToken) {
+        const { accessToken } = data.data;
+        const userData = data.data.admin;
         
         // Store tokens and user data
-        setTokens(accessToken, refreshToken);
+        setTokens(accessToken);
         setUserData(userData);
 
         toast.success('Logged in successfully!', {

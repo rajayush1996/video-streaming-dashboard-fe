@@ -29,7 +29,7 @@ export const fetchAdminUsers = async ({ page = 1, limit = 10, search = '', role 
     if (includeDeleted) url += `&includeDeleted=true`;
     
     const { data } = await axiosInstance.get(url);
-    return data;
+    return data.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch users');
   }

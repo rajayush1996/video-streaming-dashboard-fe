@@ -5,7 +5,8 @@ import axiosInstance from '@utils/axios';
 export const login = async (credentials) => {
   try {
     const response = await axiosInstance.post(config.endpoints.login, credentials);
-    if (!response.data?.data?.token) {
+    if (!response.data?.data?.accessToken) {
+
       throw new Error('Invalid response format');
     }
     return response.data;
