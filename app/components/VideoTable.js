@@ -77,6 +77,7 @@ export default function VideoRowList({
     );
   }
 
+      console.log("🚀 ~ videos:", videos[0].categoryDetails.name);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {videos.map((video) => (
@@ -113,8 +114,8 @@ export default function VideoRowList({
               <Image
                 src={video.thumbnailUrl}
                 alt={video.title}
-                width={180}
-                height={120}
+                width={200}
+                height={160}
                 style={{
                   objectFit: 'cover',
                   width: '100%',
@@ -183,7 +184,7 @@ export default function VideoRowList({
                   whiteSpace: 'nowrap'
                 }}
               >
-                {video.category}
+                {video?.categoryDetails?.name || video?.category}
               </Typography>
               <Typography
                 variant="caption"

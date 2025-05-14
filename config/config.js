@@ -11,7 +11,7 @@ const config = {
       verifyEmail: '/api/v1/admin/auth/verify-email',
       upload: '/api/v1/admin/videos/upload',
       uploadProgress: '/api/v1/admin/videos/progress',
-      metadata: '/api/v1/admin/videos/metadata',
+      metadata: '/api/v1/admin/media-metadata',
       mediaMetadata: '/api/v1/admin/media-metadata',
       resendEmail: '/api/v1/admin/auth/resend-verification',
       refreshToken: '/api/v1/admin/auth/refresh-token',
