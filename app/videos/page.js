@@ -27,6 +27,7 @@ export default function VideosPage() {
     limit: ITEMS_PER_PAGE,
     searchQuery,
     category: selectedCategory,
+    type: 'video',
   });
 
   const { data: categoryResponse } = useCategoriesByType('videos');
@@ -124,13 +125,13 @@ export default function VideosPage() {
           </button>
           {categories.map((cat) => (
             <button
-              key={cat.id}
+              key={cat?.id}
               onClick={() => handleCategoryChange(cat.id)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
                 selectedCategory === cat.id ? 'bg-blue-600 text-white' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
               }`}
             >
-              {cat.name}
+              {cat?.name}
             </button>
           ))}
         </Box>

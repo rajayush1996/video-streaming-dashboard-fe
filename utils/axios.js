@@ -20,12 +20,32 @@ function addRefreshSubscriber(callback) {
   refreshSubscribers.push(callback);
 }
 
+function setTokens({ accessToken, refreshToken }) {
+  if (accessToken) {
+    localStorage.setItem('accessToken', accessToken);
+  }
+  if (refreshToken) {
+    localStorage.setItem('refreshToken', refreshToken);
+    Cookies.set('refreshToken', refreshToken, { path: '/' });
+  }
+}
+
 function clearTokens() {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   Cookies.remove('refreshToken');
   localStorage.removeItem('userData');
 }
+
+// Create a function to handle navigation
+const redirectToSignIn = () => {
+  if (typeof window !== 'undefined') {
+    // Clear any existing tokens
+    clearTokens();
+    // Use window.location.replace for a clean navigation
+    window.location.replace('/signin');
+  }
+};
 
 // Request interceptor
 axiosInstance.interceptors.request.use(
@@ -58,17 +78,21 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Handle 401/403 errors
     if (
       (error.response?.status === 401 || error.response?.status === 403) &&
-      !originalRequest._retry
+      !originalRequest._retry &&
+      !originalRequest.url.includes('/refresh-token') // Prevent infinite loop
     ) {
       const refreshToken = Cookies.get('refreshToken') || localStorage.getItem('refreshToken');
+      
+      // If no refresh token, redirect to signin
       if (!refreshToken) {
-        clearTokens();
-        window.location.href = '/signin';
+        redirectToSignIn();
         return Promise.reject(error);
       }
 
+      // If already refreshing, add to queue
       if (isRefreshing) {
         return new Promise((resolve) => {
           addRefreshSubscriber((token) => {
@@ -83,19 +107,31 @@ axiosInstance.interceptors.response.use(
 
       try {
         const refreshEndpoint = config.endpoints.refreshToken || '/api/v1/auth/refresh-token';
-
-        const rawAxios = axios.create({ withCredentials: true });
-        const response = await rawAxios.get(`${config.apiBaseUrl}${refreshEndpoint}`);
+        const rawAxios = axios.create({ 
+          baseURL: config.apiBaseUrl,
+          withCredentials: true 
+        });
+        
+        const response = await rawAxios.post(refreshEndpoint, {
+          refreshToken: refreshToken
+        });
       
         const { accessToken, refreshToken: newRefresh } = response.data;
+        
+        if (!accessToken) {
+          throw new Error('No access token received');
+        }
       
         setTokens({ accessToken, refreshToken: newRefresh });
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         onRefreshed(accessToken);
+        
+        // Retry the original request
+        originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+        return axiosInstance(originalRequest);
       } catch (refreshError) {
         console.error('[Axios Refresh Error]', refreshError);
-        clearTokens();
-        window.location.href = '/signin';
+        redirectToSignIn();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

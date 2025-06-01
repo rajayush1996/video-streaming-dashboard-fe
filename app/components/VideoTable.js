@@ -39,15 +39,15 @@ export default function VideoRowList({
 
   const openEditModal = (video) => {
     setCurrentVideo(video);
-    setTitle(video.title);
-    setDescription(video.description);
+    setTitle(video?.title);
+    setDescription(video?.description);
     setEditModalOpen(true);
   };
 
   const handleSave = async () => {
     if (currentVideo) {
       await onUpdate({
-        id: currentVideo.id,
+        id: currentVideo?.id,
         data: {
           title,
           description
@@ -58,7 +58,7 @@ export default function VideoRowList({
   };
 
   const handlePlay = (video) => {
-    router.push(`/videos/${video.id}?data=${encodeURIComponent(JSON.stringify(video))}`);
+    router.push(`/videos/${video?.id}?data=${encodeURIComponent(JSON.stringify(video))}`);
   };
 
   if (isLoading) {
@@ -69,7 +69,7 @@ export default function VideoRowList({
     );
   }
 
-  if (!videos || videos.length === 0) {
+  if (!videos || videos?.length === 0) {
     return (
       <Typography align="center" color="text.secondary">
         No videos uploaded yet.
@@ -77,12 +77,11 @@ export default function VideoRowList({
     );
   }
 
-      console.log("🚀 ~ videos:", videos[0].categoryDetails.name);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {videos.map((video) => (
         <Box
-          key={video.id}
+          key={video?.id}
           sx={{
             display: 'flex',
             gap: 3,
@@ -110,10 +109,10 @@ export default function VideoRowList({
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}
           >
-            {video.thumbnailUrl ? (
+            {video?.thumbnailUrl ? (
               <Image
-                src={video.thumbnailUrl}
-                alt={video.title}
+                src={video?.thumbnailUrl}
+                alt={video?.title}
                 width={200}
                 height={160}
                 style={{
@@ -151,7 +150,7 @@ export default function VideoRowList({
                 whiteSpace: 'nowrap'
               }}
             >
-              {video.title}
+              {video?.title}
             </Typography>
             <Typography
               variant="body2"
@@ -165,7 +164,7 @@ export default function VideoRowList({
                 lineHeight: 1.5
               }}
             >
-              {video.description}
+              {video?.description}
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
@@ -201,14 +200,14 @@ export default function VideoRowList({
                   whiteSpace: 'nowrap'
                 }}
               >
-                {video.createdAt || "Published"}
+                {video?.createdAt || "Published"}
               </Typography>
             </Box>
           </Box>
 
           {/* Actions */}
           <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
-            {video.id && (
+            {video?.id && (
               <Tooltip title="Play">
                 <IconButton
                   color="success"

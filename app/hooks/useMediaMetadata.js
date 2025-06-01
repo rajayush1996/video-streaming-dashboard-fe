@@ -8,13 +8,14 @@ export const useMediaMetadata = (options = {}) => {
     limit = 10,
     category,
     searchQuery,
+    type,
     ...restOptions
   } = options;
 
   return useQuery({
     queryKey: ['mediaMetadata', page, limit, category, searchQuery],
     queryFn: async () => {
-      let url = `${config.endpoints.mediaMetadata}?page=${page}&limit=${limit}`;
+      let url = `${config.endpoints.mediaMetadata}?page=${page}&limit=${limit}&type=${type}`;
       
       if (category) {
         url += `&category=${encodeURIComponent(category)}`;

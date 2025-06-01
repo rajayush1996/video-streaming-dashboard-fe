@@ -126,6 +126,7 @@ const ReelUploadPage = () => {
       video: videoFile,
       thumbnail: thumbnailFile,
       onProgress: (p) => console.log("Uploading...", p),
+      mediaType: 'reel'
     });
   };
 

@@ -32,6 +32,9 @@ import DashboardLayout from '@/components/DashboardLayout';
 import NoData from '@/components/NoData';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import { useCategoriesByType } from '@/hooks/useCategories';
+import { useMediaMetadata } from '@/hooks/useMediaMetadata';
+
+const ITEMS_PER_PAGE = 6;
 
 function ReelsPage() {
   const router = useRouter();
@@ -41,14 +44,20 @@ function ReelsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [category, setCategory] = useState('');
 
-  const { data: response, isLoading, refetch } = useReels({ page, limit, search, category });
+  const { data: response, isLoading, isError } = useMediaMetadata({
+    page,
+    limit: ITEMS_PER_PAGE,
+    searchQuery: search,
+    category: category,
+    type: 'reel',
+  });
   const { data: categories = [] } = useCategoriesByType('reels');
   const deleteReelMutation = useDeleteReel();
   const data = response?.data;
 
-  useEffect(() => {
-    refetch();
-  }, [page, limit, search, category, refetch]);
+  // useEffect(() => {
+  //   refetch();
+  // }, [page, limit, search, category, refetch]);
 
   const handleSearch = () => {
     setSearch(searchInput);

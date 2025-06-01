@@ -56,6 +56,7 @@ export function useVideoUploader() {
     thumbnail,
     video,
     onProgress,
+    mediaType
   }) => {
     setIsUploading(true);
     setProgress(0);
@@ -75,6 +76,7 @@ export function useVideoUploader() {
         category,
         mediaFileId: videoInfo?.file?.fileId,
         thumbnailId: thumbNailInfo?.file?.fileId,
+        mediaType: mediaType
       });
 
       toast.success('Video uploaded successfully!');

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import AuthGuard from '@utils/authGuard';
 import { 
   Box, 
   Container, 
@@ -134,9 +135,10 @@ const getActivityIcon = (action, resourceType) => {
 };
 
 // Homepage component
-export default function HomePage() {
+function HomePage() {
   const router = useRouter();
   const { data, isLoading, isError } = useDashboardData();
+  console.log("🚀 ~ HomePage ~ data:", data);
   
   // Redirect functions
   const goToVideoUpload = () => router.push('/videos/upload');
@@ -407,5 +409,14 @@ export default function HomePage() {
         </Grid>
       </Grid>
     </Container>
+  );
+}
+
+// Wrap the HomePage with AuthGuard
+export default function ProtectedHomePage() {
+  return (
+    <AuthGuard>
+      <HomePage />
+    </AuthGuard>
   );
 }

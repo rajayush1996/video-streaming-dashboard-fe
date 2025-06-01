@@ -6,12 +6,34 @@ import * as dashboardApi from '@apis/dashboard/dashboardApi';
 export const useDashboardData = (limit = 10) => {
   return useQuery({
     queryKey: ['dashboard', { limit }],
-    queryFn: () => dashboardApi.fetchDashboardData(limit),
+    queryFn: async () => {
+      try {
+        const response = await dashboardApi.fetchDashboardData(limit);
+        return response;
+      } catch (error) {
+        console.error('Dashboard data fetch error:', error);
+        throw error;
+      }
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
-    retry: 1,
-    onError: (err) => {
-      toast.error(err.message || 'Failed to fetch dashboard data');
+    retry: (failureCount, error) => {
+      // Don't retry on any server errors (500, 502, 503, etc)
+      if (error?.response?.status >= 500) {
+        return false;
+      }
+      // Don't retry on auth errors
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      // Only retry once for other errors
+      return failureCount < 1;
+    },
+    onError: (error) => {
+      // Only show toast for non-auth errors
+      if (error?.response?.status !== 401 && error?.response?.status !== 403) {
+        toast.error(error.message || 'Failed to fetch dashboard data');
+      }
     }
   });
 };
@@ -20,12 +42,30 @@ export const useDashboardData = (limit = 10) => {
 export const useDashboardMetrics = () => {
   return useQuery({
     queryKey: ['dashboardMetrics'],
-    queryFn: dashboardApi.fetchDashboardMetrics,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: async () => {
+      try {
+        const response = await dashboardApi.fetchDashboardMetrics();
+        return response;
+      } catch (error) {
+        console.error('Dashboard metrics fetch error:', error);
+        throw error;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: 1,
-    onError: (err) => {
-      toast.error(err.message || 'Failed to fetch dashboard metrics');
+    retry: (failureCount, error) => {
+      if (error?.response?.status >= 500) {
+        return false;
+      }
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      return failureCount < 1;
+    },
+    onError: (error) => {
+      if (error?.response?.status !== 401 && error?.response?.status !== 403) {
+        toast.error(error.message || 'Failed to fetch dashboard metrics');
+      }
     }
   });
 };
@@ -34,7 +74,15 @@ export const useDashboardMetrics = () => {
 export const useRecentActivities = (limit = 10) => {
   return useQuery({
     queryKey: ['recentActivities', { limit }],
-    queryFn: () => dashboardApi.fetchRecentActivities(limit),
+    queryFn: async () => {
+      try {
+        const response = await dashboardApi.fetchRecentActivities(limit);
+        return response;
+      } catch (error) {
+        console.error('Recent activities fetch error:', error);
+        throw error;
+      }
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes (activities change more frequently)
     refetchOnWindowFocus: true,
     retry: 1,
@@ -48,12 +96,30 @@ export const useRecentActivities = (limit = 10) => {
 export const useSystemStatus = () => {
   return useQuery({
     queryKey: ['systemStatus'],
-    queryFn: dashboardApi.fetchSystemStatus,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: async () => {
+      try {
+        const response = await dashboardApi.fetchSystemStatus();
+        return response;
+      } catch (error) {
+        console.error('System status fetch error:', error);
+        throw error;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: 1,
-    onError: (err) => {
-      toast.error(err.message || 'Failed to fetch system status');
+    retry: (failureCount, error) => {
+      if (error?.response?.status >= 500) {
+        return false;
+      }
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      return failureCount < 1;
+    },
+    onError: (error) => {
+      if (error?.response?.status !== 401 && error?.response?.status !== 403) {
+        toast.error(error.message || 'Failed to fetch system status');
+      }
     }
   });
 };

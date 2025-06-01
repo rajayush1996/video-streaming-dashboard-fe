@@ -11,13 +11,16 @@ export default function AuthGuard({ children }) {
     const token = localStorage.getItem('accessToken');
 
     if (!token) {
-      router.push('/signin');
+      router.replace('/signin');
     } else {
       setAuthorized(true);
     }
-  }, []);
+  }, [router]);
 
-  if (!authorized) return null;
+  // Show nothing while checking authorization
+  if (!authorized) {
+    return null;
+  }
 
   return children;
 }

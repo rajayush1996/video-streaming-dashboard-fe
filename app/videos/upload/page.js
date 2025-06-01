@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useVideoUploader } from "@hooks/useVideoUploader";
 import { IconUpload, IconPhoto, IconVideo } from "@tabler/icons-react";
@@ -13,7 +13,7 @@ export default function UploadVideoPage() {
   const [description, setDescription] = useState('');
   const [thumbnail, setThumbnail] = useState(null);
   const [video, setVideo] = useState(null);
-  const [category, setCategory] = useState('technology');
+  const [category, setCategory] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
   const { uploadCompleteVideo } = useVideoUploader();
 
@@ -43,7 +43,8 @@ export default function UploadVideoPage() {
         thumbnail,
         video,
         fileId,
-        onProgress: (progress) => setUploadProgress(progress)
+        onProgress: (progress) => setUploadProgress(progress),
+        mediaType: 'video'
       });
 
       toast.success('Video uploaded successfully!', {
@@ -73,8 +74,11 @@ export default function UploadVideoPage() {
   };
 
   const { data: categories = [] } = useCategoriesByType('videos');
-  console.log("🚀 ~ UploadVideoPage ~ categories:", categories);
-  
+  useEffect(() => {
+  if (categories.length > 0) {
+    setCategory(categories[0]?.id); // Set the first category as default
+  }
+}, [categories]);
 
   return (
     <div className="p-6 max-w-4xl mx-auto">

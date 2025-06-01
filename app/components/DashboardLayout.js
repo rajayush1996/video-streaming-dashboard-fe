@@ -41,12 +41,13 @@ import SettingsIcon from '@mui/icons-material/Settings';
 const drawerWidth = 240;
 
 export default function DashboardLayout({ children }) {
+  const pathname = usePathname();
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const pathname = usePathname();
   const router = useRouter();
   const logoutMutation = useLogout();
   const { data: user, isLoading } = useUserProfile();
@@ -248,7 +249,7 @@ export default function DashboardLayout({ children }) {
               fontWeight: 600,
               color: 'white'
             }}>
-              {getPageTitle()}
+              {getPageTitle(pathname)}
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
             <div className="relative" ref={profileRef}>
@@ -371,11 +372,11 @@ export default function DashboardLayout({ children }) {
                   px: 1,
                   py: 0.5,
                   borderRadius: 1,
-                  bgcolor: user?.isActive ? 'success.light' : 'error.light',
-                  color: user?.isActive ? 'success.dark' : 'error.dark',
+                  bgcolor: user?.status === 'active' ? 'success.light' : 'error.light',
+                  color: user?.status === 'active' ? 'success.dark' : 'error.dark',
                 }}
               >
-                {user?.isActive ? 'Active' : 'Inactive'}
+                {user?.status === 'active' ? 'Active' : 'Inactive'}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -407,10 +408,11 @@ export default function DashboardLayout({ children }) {
   );
 }
 
-function getPageTitle() {
-  const path = window.location.pathname;
+function getPageTitle(path) {
   if (path.includes('/videos')) return 'Videos';
   if (path.includes('/reels')) return 'Reels';
   if (path.includes('/blogs')) return 'Blogs';
+  if (path.includes('/users')) return 'User Management';
+  if (path.includes('/settings')) return 'Settings';
   return 'Dashboard';
 } 
