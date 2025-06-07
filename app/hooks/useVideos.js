@@ -215,7 +215,7 @@ export const useCompleteVideoUpload = () => {
       const uploadedChunks = new Set(progressResult.uploadedChunks || []);
       
       // Calculate chunk size and total chunks
-      const chunkSize = 5 * 1024 * 1024; // 5MB chunks
+      const chunkSize = 20 * 1024 * 1024; // 20MB chunks
       const totalChunks = Math.ceil(videoFile.size / chunkSize);
       
       // Upload chunks
