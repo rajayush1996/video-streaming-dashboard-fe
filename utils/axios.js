@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 
 const axiosInstance = axios.create({
   baseURL: config.apiBaseUrl,
+  withCredentials: true,
 });
 
 // Refresh token support
