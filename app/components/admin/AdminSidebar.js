@@ -25,7 +25,7 @@ import {
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 
-const drawerWidth = 240;
+// const drawerWidth = 240;
 
 const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin' },

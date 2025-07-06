@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -8,7 +8,6 @@ import {
   Grid,
   TextField,
   Button,
-  CircularProgress,
   Pagination,
   Select,
   MenuItem,
@@ -27,70 +26,56 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { toast } from 'react-hot-toast';
-import { useReels, useDeleteReel } from '@hooks/useReels';
+import { useDeleteReel } from '@hooks/useReels';
 import DashboardLayout from '@/components/DashboardLayout';
 import NoData from '@/components/NoData';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import { useCategoriesByType } from '@/hooks/useCategories';
 import { useMediaMetadata } from '@/hooks/useMediaMetadata';
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 12;
 
 function ReelsPage() {
   const router = useRouter();
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(12);
+  const [limit, setLimit] = useState(ITEMS_PER_PAGE);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [category, setCategory] = useState('');
 
-  const { data: response, isLoading, isError } = useMediaMetadata({
+  const { data: response, isLoading } = useMediaMetadata({
     page,
-    limit: ITEMS_PER_PAGE,
+    limit,
     searchQuery: search,
-    category: category,
+    category,
     type: 'reel',
   });
+
   const { data: categories = [] } = useCategoriesByType('reels');
   const deleteReelMutation = useDeleteReel();
-  const data = response?.data;
-
-  // useEffect(() => {
-  //   refetch();
-  // }, [page, limit, search, category, refetch]);
+  const data = response;
 
   const handleSearch = () => {
     setSearch(searchInput);
     setPage(1);
   };
 
-  const handlePageChange = (event, value) => {
-    setPage(value);
-  };
-
+  const handlePageChange = (_, value) => setPage(value);
   const handleCategoryChange = (event) => {
     setCategory(event.target.value);
     setPage(1);
   };
 
-  const handleAddReel = () => {
-    router.push('/reels/upload');
-  };
-
-  const handleEditReel = (id) => {
-    router.push(`/reels/edit/${id}`);
-  };
-
-  const handleViewReel = (id) => {
-    router.push(`/reels/${id}`);
-  };
+  const handleAddReel = () => router.push('/reels/upload');
+  const handleEditReel = (id) => router.push(`/reels/edit/${id}`);
+  const handleViewReel = (id) => router.push(`/reels/${id}`);
 
   const handleDeleteReel = (id) => {
     if (window.confirm('Are you sure you want to delete this reel?')) {
       deleteReelMutation.mutate(id, {
         onSuccess: () => {
           toast.success('Reel deleted successfully');
-          refetch();
+          location.reload(); // you can replace with refetch() if available
         },
         onError: (error) => {
           toast.error(error.message || 'Failed to delete reel');
@@ -100,7 +85,7 @@ function ReelsPage() {
   };
 
   const renderReels = () => {
-    if (!data || !data.results || data.results.length === 0) {
+    if (!data?.results?.length) {
       return (
         <Box
           sx={{
@@ -125,20 +110,19 @@ function ReelsPage() {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                transition: 'transform 0.3s',
+                borderRadius: 3,
+                overflow: 'hidden',
+                boxShadow: 3,
+                transition: 'transform 0.2s ease-in-out, box-shadow 0.3s',
                 '&:hover': {
-                  transform: 'scale(1.03)',
-                  boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                  transform: 'scale(1.02)',
+                  boxShadow: 6,
                 },
               }}
             >
               <CardMedia
                 component="div"
-                sx={{
-                  position: 'relative',
-                  pt: '177.78%',
-                  cursor: 'pointer',
-                }}
+                sx={{ position: 'relative', pt: '177.78%', cursor: 'pointer' }}
                 onClick={() => handleViewReel(reel.id)}
               >
                 <Box
@@ -155,26 +139,24 @@ function ReelsPage() {
                   }}
                 />
               </CardMedia>
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h6" component="div" noWrap>
+              <CardContent sx={{ flexGrow: 1, px: 2, py: 1.5 }}>
+                <Typography variant="subtitle1" fontWeight="600" noWrap>
                   {reel.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                <Typography variant="caption" color="text.secondary">
                   {reel.views || 0} views
                 </Typography>
               </CardContent>
-              <CardActions sx={{ justifyContent: 'center' }}>
-                <Box>
-                  <IconButton size="small" onClick={() => handleViewReel(reel.id)}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleEditReel(reel.id)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleDeleteReel(reel.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
+              <CardActions sx={{ justifyContent: 'center', pb: 1 }}>
+                <IconButton size="small" onClick={() => handleViewReel(reel.id)}>
+                  <VisibilityIcon />
+                </IconButton>
+                <IconButton size="small" onClick={() => handleEditReel(reel.id)}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton size="small" onClick={() => handleDeleteReel(reel.id)}>
+                  <DeleteIcon />
+                </IconButton>
               </CardActions>
             </Card>
           </Grid>
@@ -186,34 +168,35 @@ function ReelsPage() {
   return (
     <DashboardLayout>
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        {/* Header */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            gap: 2,
+            mb: 3,
+          }}
+        >
           <Typography variant="h4" component="h1">
             Reels
           </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={handleAddReel}
-          >
+          <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleAddReel}>
             Upload Reel
           </Button>
         </Box>
 
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} md={6}>
+        {/* Filters */}
+        <Grid container spacing={2} direction={{ xs: 'column', sm: 'row' }} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
-              variant="outlined"
               size="small"
               placeholder="Search reels..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSearch();
-                }
-              }}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               InputProps={{
                 endAdornment: (
                   <IconButton onClick={handleSearch} edge="end">
@@ -223,22 +206,20 @@ function ReelsPage() {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <FormControl fullWidth size="small">
               <InputLabel>Category</InputLabel>
-              <Select
-                value={category}
-                label="Category"
-                onChange={handleCategoryChange}
-              >
+              <Select value={category} label="Category" onChange={handleCategoryChange}>
                 <MenuItem value="">All Categories</MenuItem>
                 {categories?.map((cat) => (
-                  <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                  <MenuItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={4}>
             <FormControl fullWidth size="small">
               <InputLabel>Items per page</InputLabel>
               <Select
@@ -257,12 +238,14 @@ function ReelsPage() {
           </Grid>
         </Grid>
 
+        {/* Grid or Loading */}
         {isLoading ? (
           <LoadingSkeleton count={limit} height={300} />
         ) : (
           renderReels()
         )}
 
+        {/* Pagination */}
         {data && data.totalPages > 0 && (
           <Stack alignItems="center" sx={{ mt: 4 }}>
             <Pagination
