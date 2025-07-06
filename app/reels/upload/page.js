@@ -84,8 +84,8 @@ const ReelUploadPage = () => {
       return;
     }
 
-    if (file.size > 100 * 1024 * 1024) {
-      toast.error("Video must be under 100MB");
+    if (file.size > 500 * 1024 * 1024) {
+      toast.error("Video must be under 500MB");
       return;
     }
 
