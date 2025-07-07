@@ -22,9 +22,9 @@ import {
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-export default function VideoRowList({ 
-  videos, 
-  onDelete, 
+export default function VideoRowList({
+  videos,
+  onDelete,
   onUpdate,
   totalPages = 1,
   currentPage = 1,
@@ -111,38 +111,54 @@ export default function VideoRowList({
           >
             {video?.thumbnailUrl ? (
               <Image
-                src={video?.thumbnailUrl}
-                alt={video?.title}
+                src={video.thumbnailUrl}
+                alt={video.title}
                 width={200}
                 height={160}
                 style={{
                   objectFit: 'cover',
                   width: '100%',
-                  height: '100%'
+                  height: '100%',
                 }}
                 unoptimized
+              />
+            ) : video?.videoUrl ? (
+              <video
+                src={video.videoUrl}
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                style={{
+                  objectFit: 'cover',
+                  width: '100%',
+                  height: '100%',
+                }}
               />
             ) : (
               <Box
                 sx={{
                   width: '100%',
                   height: '100%',
+                  backgroundColor: 'grey.800',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'text.secondary'
+                  color: 'white',
+                  fontSize: '0.875rem',
                 }}
               >
-                <Typography variant="caption">No thumbnail</Typography>
+                No Preview
               </Box>
             )}
+
           </Box>
 
           {/* Info */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
+            <Typography
+              variant="h6"
+              sx={{
                 fontWeight: 600,
                 mb: 1,
                 overflow: 'hidden',
@@ -279,60 +295,60 @@ export default function VideoRowList({
       {/* Edit Dialog */}
       {currentVideo && (
         <Dialog
-        open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        maxWidth="md"
-        fullWidth
-        sx={{ borderRadius: '25px'}}
-      >
-        <DialogTitle>Edit Video</DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
-            <TextField
-              label="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ style: { color: '#e0e0e0' } }}
-              InputProps={{
-                style: {
-                  color: '#fff',
-                  borderColor: '#555',
-                  backgroundColor: '#1e1e1e',
-                },
-              }}
-              sx={{ mt: 1}}
-            />
-            <TextField
-              label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              fullWidth
-              multiline
-              rows={4}
-              variant="outlined"
-              InputLabelProps={{ style: { color: '#e0e0e0' } }}
-              InputProps={{
-                style: {
-                  color: '#fff',
-                  borderColor: '#555',
-                  backgroundColor: '#1e1e1e',
-                },
-              }}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditModalOpen(false)} sx={{ color: '#2196f3' }}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} variant="contained" color="primary">
-            Save Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
+          open={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          maxWidth="md"
+          fullWidth
+          sx={{ borderRadius: '25px' }}
+        >
+          <DialogTitle>Edit Video</DialogTitle>
+          <DialogContent sx={{ pt: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+              <TextField
+                label="Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ style: { color: '#e0e0e0' } }}
+                InputProps={{
+                  style: {
+                    color: '#fff',
+                    borderColor: '#555',
+                    backgroundColor: '#1e1e1e',
+                  },
+                }}
+                sx={{ mt: 1 }}
+              />
+              <TextField
+                label="Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                fullWidth
+                multiline
+                rows={4}
+                variant="outlined"
+                InputLabelProps={{ style: { color: '#e0e0e0' } }}
+                InputProps={{
+                  style: {
+                    color: '#fff',
+                    borderColor: '#555',
+                    backgroundColor: '#1e1e1e',
+                  },
+                }}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditModalOpen(false)} sx={{ color: '#2196f3' }}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} variant="contained" color="primary">
+              Save Changes
+            </Button>
+          </DialogActions>
+        </Dialog>
+
       )}
     </Box>
   );

@@ -6,7 +6,6 @@ import { IconUpload, IconPhoto, IconVideo } from "@tabler/icons-react";
 import { toast } from "react-toastify";
 import { useCategoriesByType } from '@/hooks/useCategories';
 
-
 export default function UploadVideoPage() {
   const router = useRouter();
   const [title, setTitle] = useState('');
@@ -16,21 +15,19 @@ export default function UploadVideoPage() {
   const [category, setCategory] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
   const { uploadCompleteVideo } = useVideoUploader();
+  const { data: categories = [] } = useCategoriesByType('videos');
+
+  useEffect(() => {
+    if (categories.length > 0) {
+      setCategory(categories[0]?.id);
+    }
+  }, [categories]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title || !description || !thumbnail || !video || !category) {
-      toast.error('Please fill in all fields and upload both thumbnail and video', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      });
+    if (!title || !description || !video || !category) {
+      toast.error('Please fill in all required fields and upload the video');
       return;
     }
 
@@ -47,49 +44,24 @@ export default function UploadVideoPage() {
         mediaType: 'video'
       });
 
-      toast.success('Video uploaded successfully!', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      });
-
+      toast.success('Video uploaded successfully!');
       router.push('/videos');
     } catch (error) {
-      toast.error(error.message || 'Failed to upload video', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      });
+      console.log("🚀 ~ handleSubmit ~ error:", error);
+      toast.error(error.message || 'Failed to upload video');
     }
   };
 
-  const { data: categories = [] } = useCategoriesByType('videos');
-  useEffect(() => {
-  if (categories.length > 0) {
-    setCategory(categories[0]?.id); // Set the first category as default
-  }
-}, [categories]);
-
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="bg-gray-800/50 rounded-xl shadow-lg p-6">
-        <h1 className="text-2xl font-bold text-white mb-8 text-center">Upload New Video</h1>
-        
+      <div className="bg-gray-900/70 rounded-2xl shadow-xl p-8 border border-gray-700">
+        <h1 className="text-3xl font-bold text-white mb-6 text-center">🎬 Upload New Video</h1>
+
         {uploadProgress > 0 && (
           <div className="mb-6">
             <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-600 transition-all duration-300"
+              <div
+                className="h-full bg-blue-500 transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
@@ -100,9 +72,9 @@ export default function UploadVideoPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title Input */}
+          {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-200 mb-2">
+            <label htmlFor="title" className="text-gray-300 font-medium mb-1 block">
               Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -110,38 +82,36 @@ export default function UploadVideoPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              required
-              className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter video title"
+              className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          {/* Description Input */}
+          {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-200 mb-2">
+            <label htmlFor="description" className="text-gray-300 font-medium mb-1 block">
               Description <span className="text-red-500">*</span>
             </label>
             <textarea
               id="description"
+              rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              required
-              rows={4}
-              className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Enter video description"
+              className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
 
-          {/* Category Select */}
+          {/* Category */}
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-200 mb-2">
+            <label htmlFor="category" className="text-gray-300 font-medium mb-1 block">
               Category <span className="text-red-500">*</span>
             </label>
             <select
               id="category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
@@ -151,74 +121,69 @@ export default function UploadVideoPage() {
             </select>
           </div>
 
-          {/* File Upload Section */}
+          {/* File Uploads */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Thumbnail Upload */}
+            {/* Thumbnail Upload (optional) */}
             <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Thumbnail <span className="text-red-500">*</span>
+              <label className="text-gray-300 font-medium mb-1 block">
+                Thumbnail (Optional)
               </label>
-              <div className="relative">
+              <label
+                htmlFor="thumbnail-upload"
+                className="flex items-center justify-center h-32 bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-400 transition"
+              >
                 <input
-                  type="file"
-                  onChange={(e) => setThumbnail(e.target.files[0])}
-                  accept="image/*"
-                  required
-                  className="hidden"
                   id="thumbnail-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
+                  className="hidden"
                 />
-                <label
-                  htmlFor="thumbnail-upload"
-                  className="flex items-center justify-center w-full h-32 px-4 transition bg-gray-700/50 border-2 border-gray-600 border-dashed rounded-lg appearance-none cursor-pointer hover:border-gray-500 focus:outline-none"
-                >
-                  <div className="flex flex-col items-center space-y-2">
-                    <IconPhoto size={24} className="text-gray-400" />
-                    <span className="text-sm text-gray-400">
-                      {thumbnail ? thumbnail.name : 'Click to upload thumbnail'}
-                    </span>
-                  </div>
-                </label>
-              </div>
+                <div className="text-gray-400 text-sm flex flex-col items-center">
+                  <IconPhoto size={24} />
+                  <span>{thumbnail ? thumbnail.name : "Click to upload thumbnail"}</span>
+                </div>
+              </label>
             </div>
 
-            {/* Video Upload */}
+            {/* Video Upload (required) */}
             <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
+              <label className="text-gray-300 font-medium mb-1 block">
                 Video <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
+              <label
+                htmlFor="video-upload"
+                className="flex items-center justify-center h-32 bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-400 transition"
+              >
                 <input
+                  id="video-upload"
                   type="file"
-                  onChange={(e) => setVideo(e.target.files[0])}
                   accept="video/*"
+                  onChange={(e) => setVideo(e.target.files?.[0] || null)}
                   required
                   className="hidden"
-                  id="video-upload"
                 />
-                <label
-                  htmlFor="video-upload"
-                  className="flex items-center justify-center w-full h-32 px-4 transition bg-gray-700/50 border-2 border-gray-600 border-dashed rounded-lg appearance-none cursor-pointer hover:border-gray-500 focus:outline-none"
-                >
-                  <div className="flex flex-col items-center space-y-2">
-                    <IconVideo size={24} className="text-gray-400" />
-                    <span className="text-sm text-gray-400">
-                      {video ? video.name : 'Click to upload video'}
-                    </span>
-                  </div>
-                </label>
-              </div>
+                <div className="text-gray-400 text-sm flex flex-col items-center">
+                  <IconVideo size={24} />
+                  <span>{video ? video.name : "Click to upload video"}</span>
+                </div>
+              </label>
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end mt-8">
+          <div className="flex justify-end pt-4">
             <button
               type="submit"
               disabled={uploadProgress > 0}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
+                uploadProgress > 0
+                  ? "bg-gray-600 text-gray-300 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
             >
               <IconUpload size={20} />
-              {uploadProgress > 0 ? 'Uploading...' : 'Upload Video'}
+              {uploadProgress > 0 ? "Uploading..." : "Upload Video"}
             </button>
           </div>
         </form>

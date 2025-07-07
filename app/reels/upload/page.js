@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Box,
   Button,
@@ -29,6 +28,7 @@ import { useCategoriesByType } from "@/hooks/useCategories";
 const ReelUploadPage = () => {
   const router = useRouter();
   const fileInputRef = useRef(null);
+
   const [formValues, setFormValues] = useState({
     title: "",
     description: "",
@@ -43,6 +43,7 @@ const ReelUploadPage = () => {
   const [thumbnailPreview, setThumbnailPreview] = useState("");
 
   const { uploadReel, isUploading, progress } = useUploadReelChunked();
+  const { data: categories = [] } = useCategoriesByType("reels");
 
   const handleBack = () => router.push("/reels");
 
@@ -80,7 +81,7 @@ const ReelUploadPage = () => {
       "video/x-ms-wmv",
     ];
     if (!validTypes.includes(file.type)) {
-      toast.error("Please upload a valid video file (MP4, MOV, AVI, WMV)");
+      toast.error("Upload a valid video: MP4, MOV, AVI, WMV");
       return;
     }
 
@@ -99,7 +100,7 @@ const ReelUploadPage = () => {
 
     const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!validTypes.includes(file.type)) {
-      toast.error("Please upload a valid image file (JPG, PNG, WEBP, GIF)");
+      toast.error("Use JPG, PNG, WEBP, or GIF only");
       return;
     }
 
@@ -119,52 +120,90 @@ const ReelUploadPage = () => {
     if (!title.trim()) return toast.error("Title is required");
     if (!category) return toast.error("Category is required");
     if (!videoFile) return toast.error("Video file is required");
-    if (!thumbnailFile) return toast.error("Thumbnail image is required");
 
     uploadReel({
       ...formValues,
       video: videoFile,
-      thumbnail: thumbnailFile,
+      thumbnail: thumbnailFile || null,
       onProgress: (p) => console.log("Uploading...", p),
-      mediaType: 'reel'
+      mediaType: "reel",
     });
   };
 
-  const { data: categories = [] } = useCategoriesByType("reels");
-  console.log("🚀 ~ UploadVideoPage ~ categories:", categories);
-
   return (
     <DashboardLayout>
-      <Box sx={{ mb: 4 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={handleBack}
-          sx={{ mb: 2 }}
-        >
+      <Box mb={4}>
+        <Button startIcon={<ArrowBackIcon />} onClick={handleBack} sx={{ mb: 2 }}>
           Back to Reels
         </Button>
 
-        <Typography variant="h4" sx={{ mb: 4 }}>
-          Upload New Reel
+        <Typography variant="h4" gutterBottom>
+          Upload a New Reel
         </Typography>
 
-        <Paper elevation={3} sx={{ p: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
           <form onSubmit={handleSubmit}>
             <Grid container spacing={4}>
               {/* Upload Section */}
               <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
+                <Stack spacing={4}>
                   {/* Video Upload */}
-                  <Typography variant="h6" sx={{ mb: 2 }}>
-                    Upload Video
-                  </Typography>
-                  {!videoPreview ? (
+                  <Box>
+                    <Typography variant="h6" mb={1}>
+                      Upload Video <span style={{ color: "red" }}>*</span>
+                    </Typography>
+                    {!videoPreview ? (
+                      <Box
+                        sx={{
+                          border: "2px dashed #ccc",
+                          borderRadius: 2,
+                          p: 3,
+                          textAlign: "center",
+                          cursor: "pointer",
+                          "&:hover": { borderColor: "primary.main" },
+                        }}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <input
+                          type="file"
+                          accept="video/*"
+                          ref={fileInputRef}
+                          style={{ display: "none" }}
+                          onChange={handleVideoChange}
+                        />
+                        <CloudUploadIcon sx={{ fontSize: 50, color: "text.secondary", mb: 2 }} />
+                        <Typography>Click or drag your reel here</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Formats: MP4, MOV, AVI, WMV (Max 500MB)
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box sx={{ position: "relative" }}>
+                        <video src={videoPreview} controls style={{ width: "100%", borderRadius: 8 }} />
+                        <IconButton
+                          sx={{
+                            position: "absolute",
+                            top: 10,
+                            right: 10,
+                            bgcolor: "rgba(0,0,0,0.6)",
+                            color: "white",
+                          }}
+                          onClick={() => {
+                            setVideoFile(null);
+                            setVideoPreview("");
+                          }}
+                        >
+                          <ClearIcon />
+                        </IconButton>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Thumbnail Upload */}
+                  <Box>
+                    <Typography variant="h6" mb={1}>
+                      Upload Thumbnail (Optional)
+                    </Typography>
                     <Box
                       sx={{
                         border: "2px dashed #ccc",
@@ -172,112 +211,57 @@ const ReelUploadPage = () => {
                         p: 3,
                         textAlign: "center",
                         cursor: "pointer",
+                        position: "relative",
                         "&:hover": { borderColor: "primary.main" },
                       }}
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => {
+                        const input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = "image/*";
+                        input.onchange = handleThumbnailChange;
+                        input.click();
+                      }}
                     >
-                      <input
-                        type="file"
-                        accept="video/*"
-                        ref={fileInputRef}
-                        style={{ display: "none" }}
-                        onChange={handleVideoChange}
-                      />
-                      <CloudUploadIcon
-                        sx={{ fontSize: 60, color: "text.secondary", mb: 2 }}
-                      />
-                      <Typography>Click or drag your reel here</Typography>
-                      <Typography variant="caption" display="block" mt={1}>
-                        Formats: MP4, MOV, AVI, WMV (Max 100MB)
-                      </Typography>
+                      {!thumbnailPreview ? (
+                        <>
+                          <CloudUploadIcon sx={{ fontSize: 40, color: "text.secondary", mb: 1 }} />
+                          <Typography>Click to upload thumbnail</Typography>
+                        </>
+                      ) : (
+                        <>
+                          <img
+                            src={thumbnailPreview}
+                            alt="Thumbnail"
+                            style={{
+                              width: "100%",
+                              maxHeight: 200,
+                              objectFit: "contain",
+                            }}
+                          />
+                          <IconButton
+                            sx={{
+                              position: "absolute",
+                              top: 10,
+                              right: 10,
+                              bgcolor: "rgba(0,0,0,0.5)",
+                              color: "white",
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setThumbnailFile(null);
+                              setThumbnailPreview("");
+                            }}
+                          >
+                            <ClearIcon />
+                          </IconButton>
+                        </>
+                      )}
                     </Box>
-                  ) : (
-                    <Box sx={{ position: "relative", mb: 2 }}>
-                      <video
-                        src={videoPreview}
-                        controls
-                        style={{ width: "100%", borderRadius: 8 }}
-                      />
-                      <IconButton
-                        sx={{
-                          position: "absolute",
-                          top: 10,
-                          right: 10,
-                          bgcolor: "rgba(0,0,0,0.5)",
-                          color: "white",
-                        }}
-                        onClick={() => {
-                          setVideoFile(null);
-                          setVideoPreview("");
-                        }}
-                      >
-                        <ClearIcon />
-                      </IconButton>
-                    </Box>
-                  )}
-
-                  {/* Thumbnail Upload */}
-                  <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-                    Upload Thumbnail
-                  </Typography>
-                  <Box
-                    sx={{
-                      border: "2px dashed #ccc",
-                      borderRadius: 2,
-                      p: 3,
-                      textAlign: "center",
-                      cursor: "pointer",
-                      position: "relative",
-                    }}
-                    onClick={() => {
-                      const input = document.createElement("input");
-                      input.type = "file";
-                      input.accept = "image/*";
-                      input.onchange = handleThumbnailChange;
-                      input.click();
-                    }}
-                  >
-                    {thumbnailPreview ? (
-                      <>
-                        <img
-                          src={thumbnailPreview}
-                          alt="Thumbnail"
-                          style={{
-                            width: "100%",
-                            maxHeight: 200,
-                            objectFit: "contain",
-                          }}
-                        />
-                        <IconButton
-                          sx={{
-                            position: "absolute",
-                            top: 10,
-                            right: 10,
-                            bgcolor: "rgba(0,0,0,0.5)",
-                            color: "white",
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setThumbnailFile(null);
-                            setThumbnailPreview("");
-                          }}
-                        >
-                          <ClearIcon />
-                        </IconButton>
-                      </>
-                    ) : (
-                      <>
-                        <CloudUploadIcon
-                          sx={{ fontSize: 40, color: "text.secondary", mb: 1 }}
-                        />
-                        <Typography>Click to upload thumbnail</Typography>
-                      </>
-                    )}
                   </Box>
-                </Box>
+                </Stack>
               </Grid>
 
-              {/* Form Fields */}
+              {/* Form Section */}
               <Grid item xs={12} md={6}>
                 <Stack spacing={3}>
                   <TextField
@@ -285,35 +269,32 @@ const ReelUploadPage = () => {
                     name="title"
                     value={formValues.title}
                     onChange={handleFormChange}
-                    required
                     fullWidth
+                    required
                   />
                   <TextField
                     label="Description"
                     name="description"
                     value={formValues.description}
                     onChange={handleFormChange}
+                    fullWidth
                     multiline
                     rows={4}
-                    fullWidth
                   />
                   <FormControl fullWidth required>
                     <InputLabel>Category</InputLabel>
-                    <Select
-                      name="category"
-                      value={formValues.category}
-                      onChange={handleFormChange}
-                    >
+                    <Select name="category" value={formValues.category} onChange={handleFormChange}>
                       {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
+                        <MenuItem key={cat.id} value={cat.id}>
                           {cat.name}
-                        </option>
+                        </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
 
+                  {/* Tags Input */}
                   <Box>
-                    <Box display="flex" gap={1} mb={1}>
+                    <Stack direction="row" spacing={1} mb={1}>
                       <TextField
                         label="Add Tag"
                         value={tagInput}
@@ -327,24 +308,18 @@ const ReelUploadPage = () => {
                         fullWidth
                         size="small"
                       />
-                      <Button
-                        onClick={handleAddTag}
-                        disabled={!tagInput.trim()}
-                      >
+                      <Button onClick={handleAddTag} disabled={!tagInput.trim()}>
                         Add
                       </Button>
-                    </Box>
+                    </Stack>
                     <Box display="flex" flexWrap="wrap" gap={1}>
                       {formValues.tags.map((tag) => (
-                        <Chip
-                          key={tag}
-                          label={tag}
-                          onDelete={() => handleRemoveTag(tag)}
-                        />
+                        <Chip key={tag} label={tag} onDelete={() => handleRemoveTag(tag)} />
                       ))}
                     </Box>
                   </Box>
 
+                  {/* Submit Button */}
                   <Button
                     type="submit"
                     variant="contained"

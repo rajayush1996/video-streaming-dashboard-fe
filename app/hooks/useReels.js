@@ -42,7 +42,6 @@ export const useUploadReelChunked = () => {
     form.append('fileName', fileName);
     form.append('isThumbnail', 'true');
     form.append('thumbnail', file);
-    console.log("🚀 ~ uploadThumbnail ~ form:", form)
     const res = await axiosInstance.post(config.endpoints.reelsUpload, form);
     return {
       file: res?.data?.thumbUrl?.file,
@@ -89,8 +88,10 @@ export const useUploadReelChunked = () => {
       const sanitizedTitle = title.replace(/\s+/g, '_');
       const thumbName = `${fileId}_thumb.jpg`;
       const videoName = `${fileId}_${sanitizedTitle}.mp4`;
-
-      const thumbInfo = await uploadThumbnail(thumbnail, thumbName);
+      let thumbInfo;
+      if(thumbnail){
+        thumbInfo = await uploadThumbnail(thumbnail, thumbName);
+      }
       const videoInfo = await uploadVideoInChunks(video, videoName, onProgress);
 
       await axiosInstance.post(config.endpoints.metadata, {
@@ -99,12 +100,12 @@ export const useUploadReelChunked = () => {
         category,
         tags,
         mediaFileId: videoInfo?.file?.fileId,
-        thumbnailId: thumbInfo?.file?.fileId,
+        thumbnailId: thumbInfo && thumbInfo?.file?.fileId,
         mediaType: 'reel',
       });
 
       return {
-        thumbUrl: thumbInfo.url,
+        thumbUrl: thumbInfo?.url,
         videoUrl: videoInfo.url,
       };
     },

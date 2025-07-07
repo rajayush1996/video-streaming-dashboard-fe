@@ -67,23 +67,29 @@ export function useVideoUploader() {
     const videoName = `${fileId}_${sanitizedTitle}.mp4`;
 
     try {
-      const thumbNailInfo = await uploadThumbnail(thumbnail, thumbName);
+      let thumbNailInfo;
+      if(thumbnail) {
+        thumbNailInfo = await uploadThumbnail(thumbnail, thumbName);
+
+      }
       const videoInfo = await uploadVideoInChunks(video, videoName, onProgress);
+      console.log("🚀 ~ useVideoUploader ~ videoInfo:", videoInfo);
 
       await axios.post(config.endpoints.metadata, {
         title,
         description,
         category,
         mediaFileId: videoInfo?.file?.fileId,
-        thumbnailId: thumbNailInfo?.file?.fileId,
+        thumbnailId: thumbNailInfo && thumbNailInfo?.file?.fileId,
         mediaType: mediaType
       });
 
       toast.success('Video uploaded successfully!');
       setIsUploading(false);
       setProgress(0);
-      return { thumbUrl: thumbNailInfo.url, videoUrl: videoInfo.url };
+      return { thumbUrl: thumbNailInfo?.url, videoUrl: videoInfo?.url };
     } catch (err) {
+      console.log("🚀 ~ useVideoUploader ~ err:", err);
       setIsUploading(false);
       setProgress(0);
       toast.error(err?.response?.data?.error || err.message);
