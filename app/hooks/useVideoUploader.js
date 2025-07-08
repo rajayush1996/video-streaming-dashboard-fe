@@ -165,7 +165,7 @@ export function useVideoUploader() {
             // --- Post metadata to your backend (for your database) ---
             await axiosInstance.post(endpoints.mediaMetadata, {
                 title,
-                description,
+                description : description || undefined,
                 category,
                 thumbnailId: thumbnailDetails && thumbnailDetails?.fileDetails?.file?.fileId || undefined,
                 mediaFileId: finalVideoDetails?.filesDetails?.fileDetails?.fileId, // Pass the obtained thumbnail URL
