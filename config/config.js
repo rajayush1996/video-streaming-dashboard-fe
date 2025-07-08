@@ -23,7 +23,13 @@ const config = {
       reels: '/api/v1/admin/reels',
       reelsUpload: '/api/v1/admin/reels/upload',
       categories: '/api/v1/admin/categories',
-      categoryType: '/api/v1/admin/categories/type'
+      categoryType: '/api/v1/admin/categories/type',
+      uploadImage: '/api/v1/admin/upload/image',
+      uploadInitiate: '/api/v1/admin/upload/initiate',
+      uploadStatus: '/api/v1/admin/upload/status',
+      uploadChunk: '/api/v1/admin/upload/chunk',
+      uploadComplete: '/api/v1/admin/upload/complete',
+      
     },
   };
   

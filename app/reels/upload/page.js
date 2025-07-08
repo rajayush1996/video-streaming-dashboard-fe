@@ -41,8 +41,8 @@ const ReelUploadPage = () => {
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [videoPreview, setVideoPreview] = useState("");
   const [thumbnailPreview, setThumbnailPreview] = useState("");
-
-  const { uploadReel, isUploading, progress } = useUploadReelChunked();
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
   const { data: categories = [] } = useCategoriesByType("reels");
 
   const handleBack = () => router.push("/reels");
@@ -113,21 +113,32 @@ const ReelUploadPage = () => {
     setThumbnailPreview(URL.createObjectURL(file));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const { title, category } = formValues;
     if (!title.trim()) return toast.error("Title is required");
     if (!category) return toast.error("Category is required");
     if (!videoFile) return toast.error("Video file is required");
+    const fileId = `reel-${Date.now()}`;
+    // uploadReel({
+    //   ...formValues,
+    //   video: videoFile,
+    //   thumbnail: thumbnailFile || null,
+    //   onProgress: (p) => console.log("Uploading...", p),
+    //   mediaType: "reel",
+    // });
 
-    uploadReel({
-      ...formValues,
-      video: videoFile,
-      thumbnail: thumbnailFile || null,
-      onProgress: (p) => console.log("Uploading...", p),
-      mediaType: "reel",
-    });
+    await uploadCompleteVideo({
+        title: formValues.title,
+        description: formValues.description,
+        category: formValues.category,
+        thumbnail: thumbnailFile,
+        video: videoFile,
+        fileId,
+        onProgress: (progress) => setUploadProgress(progress),
+        mediaType: 'reel'
+      });
   };
 
   return (

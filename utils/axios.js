@@ -63,10 +63,14 @@ axiosInstance.interceptors.request.use(
       req.headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // Skip setting content-type for FormData OR chunked video upload
+    const isChunkUpload = req.url?.includes('/api/v1/admin/upload/chunk');
+
     // Conditionally set content type (skip for FormData)
-    if (!(req.data instanceof FormData)) {
+    if (!(req.data instanceof FormData)  && !isChunkUpload) {
       req.headers['Content-Type'] = 'application/json';
     }
+
 
     return req;
   },
