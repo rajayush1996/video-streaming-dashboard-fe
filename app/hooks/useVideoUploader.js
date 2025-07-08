@@ -167,7 +167,7 @@ export function useVideoUploader() {
                 title,
                 description,
                 category,
-                thumbnailId: thumbnailDetails && thumbnailDetails?.fileDetails?.file?.fileId,
+                thumbnailId: thumbnailDetails && thumbnailDetails?.fileDetails?.file?.fileId || undefined,
                 mediaFileId: finalVideoDetails?.filesDetails?.fileDetails?.fileId, // Pass the obtained thumbnail URL
                 mediaType: mediaType,
             }, { signal });
