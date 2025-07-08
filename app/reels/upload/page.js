@@ -24,6 +24,7 @@ import { toast } from "react-hot-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useUploadReelChunked } from "@/hooks/useReels";
 import { useCategoriesByType } from "@/hooks/useCategories";
+import { useVideoUploader } from "@/hooks/useVideoUploader";
 
 const ReelUploadPage = () => {
   const router = useRouter();
@@ -42,7 +43,11 @@ const ReelUploadPage = () => {
   const [videoPreview, setVideoPreview] = useState("");
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
-  
+  const { uploadCompleteVideo } = useVideoUploader();
+  const [isUpload, setIsUpload] = useState(false);
+
+
+
   const { data: categories = [] } = useCategoriesByType("reels");
 
   const handleBack = () => router.push("/reels");
@@ -121,15 +126,10 @@ const ReelUploadPage = () => {
     if (!category) return toast.error("Category is required");
     if (!videoFile) return toast.error("Video file is required");
     const fileId = `reel-${Date.now()}`;
-    // uploadReel({
-    //   ...formValues,
-    //   video: videoFile,
-    //   thumbnail: thumbnailFile || null,
-    //   onProgress: (p) => console.log("Uploading...", p),
-    //   mediaType: "reel",
-    // });
 
-    await uploadCompleteVideo({
+    setIsUpload(true);
+    try {
+      await uploadCompleteVideo({
         title: formValues.title,
         description: formValues.description,
         category: formValues.category,
@@ -139,6 +139,13 @@ const ReelUploadPage = () => {
         onProgress: (progress) => setUploadProgress(progress),
         mediaType: 'reel'
       });
+      toast.success("Reel uploaded successfully!");
+      router.push("/reels");
+    } catch (error) {
+      toast.error(error?.message || "Failed to upload reel");
+    } finally {
+      setIsUpload(false);
+    }
   };
 
   return (
@@ -336,9 +343,9 @@ const ReelUploadPage = () => {
                     variant="contained"
                     color="primary"
                     size="large"
-                    disabled={uploadProgress > 0}
+                    disabled={isUpload}
                   >
-                    {uploadProgress ? (
+                    {isUpload ? (
                       <>
                         <CircularProgress size={20} sx={{ mr: 1 }} />
                         Uploading... {uploadProgress}%
