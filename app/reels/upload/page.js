@@ -336,12 +336,12 @@ const ReelUploadPage = () => {
                     variant="contained"
                     color="primary"
                     size="large"
-                    disabled={isUploading}
+                    disabled={uploadProgress > 0}
                   >
-                    {isUploading ? (
+                    {uploadProgress ? (
                       <>
                         <CircularProgress size={20} sx={{ mr: 1 }} />
-                        Uploading... {progress}%
+                        Uploading... {uploadProgress}%
                       </>
                     ) : (
                       "Upload Reel"
