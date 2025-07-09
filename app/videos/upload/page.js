@@ -5,6 +5,7 @@ import { useVideoUploader } from "@hooks/useVideoUploader";
 import { IconUpload, IconPhoto, IconVideo } from "@tabler/icons-react";
 import { toast } from "react-toastify";
 import { useCategoriesByType } from '@/hooks/useCategories';
+import { uploadThumbnail, useVideoUpload } from "@/hooks/useVideoUpload";
 
 export default function UploadVideoPage() {
   const router = useRouter();
@@ -14,8 +15,27 @@ export default function UploadVideoPage() {
   const [video, setVideo] = useState(null);
   const [category, setCategory] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { uploadCompleteVideo } = useVideoUploader();
+  // const { uploadCompleteVideo } = useVideoUploader();
   const { data: categories = [] } = useCategoriesByType('videos');
+
+  const { handleFileSelect, startUpload, progress, uploading, errorMessage, fileName } = useVideoUpload({
+    zone: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE,
+    accessKey: process.env.NEXT_PUBLIC_BUNNY_ACCESS_KEY,
+    onComplete: (fileName) => {
+      router.push('/videos')
+    }
+  });
+
+
+
+
+  const handleSelectedFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleFileSelect(file);
+      setVideo(file);
+    }
+  };
 
   useEffect(() => {
     if (categories.length > 0) {
@@ -26,29 +46,39 @@ export default function UploadVideoPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title || !description || !video || !category) {
+    if (!title || !video || !category) {
       toast.error('Please fill in all required fields and upload the video');
       return;
     }
-
-    try {
-      const fileId = `vid-${Date.now()}`;
-      await uploadCompleteVideo({
-        title,
-        description,
-        category,
+    let thumbnailUrl = null;
+    if (thumbnail) {
+      setUploadProgress(1)
+      thumbnailUrl = await uploadThumbnail(
         thumbnail,
-        video,
-        fileId,
-        onProgress: (progress) => setUploadProgress(progress),
-        mediaType: 'video'
-      });
-
+        process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE,
+        process.env.NEXT_PUBLIC_BUNNY_ACCESS_KEY
+      );
+    }
+    try {
+      await startUpload({
+        title,
+        description: description || undefined,
+        category,
+        thumbnailUrl: thumbnailUrl || undefined,
+        mediaType: 'video',
+      }); // Wait for upload to finish
       toast.success('Video uploaded successfully!');
-      router.push('/videos');
+      // router.push('/videos');
     } catch (error) {
       console.log("🚀 ~ handleSubmit ~ error:", error);
       toast.error(error.message || 'Failed to upload video');
+    } finally {
+      setUploadProgress(0);
+      setTitle('');
+      setDescription('');
+      setThumbnail(null);
+      setVideo(null);
+      setCategory(categories[0]?.id || '');
     }
   };
 
@@ -57,16 +87,16 @@ export default function UploadVideoPage() {
       <div className="bg-gray-900/70 rounded-2xl shadow-xl p-8 border border-gray-700">
         <h1 className="text-3xl font-bold text-white mb-6 text-center">🎬 Upload New Video</h1>
 
-        {uploadProgress > 0 && (
+        {progress > 0 && (
           <div className="mb-6">
             <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-blue-500 transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
+                style={{ width: `${progress}%` }}
               />
             </div>
             <p className="text-sm text-gray-400 mt-2 text-center">
-              Uploading: {Math.round(uploadProgress)}%
+              Uploading: {Math.round(progress)}%
             </p>
           </div>
         )}
@@ -159,7 +189,7 @@ export default function UploadVideoPage() {
                   id="video-upload"
                   type="file"
                   accept="video/*"
-                  onChange={(e) => setVideo(e.target.files?.[0] || null)}
+                  onChange={handleSelectedFile}
                   required
                   className="hidden"
                 />
@@ -175,15 +205,14 @@ export default function UploadVideoPage() {
           <div className="flex justify-end pt-4">
             <button
               type="submit"
-              disabled={uploadProgress > 0}
-              className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
-                uploadProgress > 0
-                  ? "bg-gray-600 text-gray-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
-              }`}
+              disabled={uploading}
+              className={`px-6 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${uploadProgress > 0
+                ? "bg-gray-600 text-gray-300 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
             >
               <IconUpload size={20} />
-              {uploadProgress > 0 ? "Uploading..." : "Upload Video"}
+              {uploading ? "Uploading..." : "Upload Video"}
             </button>
           </div>
         </form>

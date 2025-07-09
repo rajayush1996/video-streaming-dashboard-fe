@@ -25,6 +25,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useUploadReelChunked } from "@/hooks/useReels";
 import { useCategoriesByType } from "@/hooks/useCategories";
 import { useVideoUploader } from "@/hooks/useVideoUploader";
+import { uploadThumbnail, useVideoUpload } from "@/hooks/useVideoUpload";
 
 const ReelUploadPage = () => {
   const router = useRouter();
@@ -43,14 +44,28 @@ const ReelUploadPage = () => {
   const [videoPreview, setVideoPreview] = useState("");
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { uploadCompleteVideo } = useVideoUploader();
+  // const { uploadCompleteVideo } = useVideoUploader();
   const [isUpload, setIsUpload] = useState(false);
 
-
+  const { handleFileSelect, startUpload, progress, uploading, errorMessage, fileName } = useVideoUpload({
+      zone: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE,
+      accessKey: process.env.NEXT_PUBLIC_BUNNY_ACCESS_KEY,
+      onComplete: (fileName) => {
+        router.push('/reels')
+      }
+    });
 
   const { data: categories = [] } = useCategoriesByType("reels");
 
   const handleBack = () => router.push("/reels");
+
+  // const handleSelectedFile = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     handleFileSelect(file);
+  //     setVideoFile(file);
+  //   }
+  // };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -94,7 +109,7 @@ const ReelUploadPage = () => {
       toast.error("Video must be under 500MB");
       return;
     }
-
+    handleFileSelect(file);
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
   };
@@ -125,22 +140,39 @@ const ReelUploadPage = () => {
     if (!title.trim()) return toast.error("Title is required");
     if (!category) return toast.error("Category is required");
     if (!videoFile) return toast.error("Video file is required");
-    const fileId = `reel-${Date.now()}`;
+    // const fileId = `reel-${Date.now()}`;
 
     setIsUpload(true);
+    let thumbnailUrl = null;
+    if (thumbnailFile) {
+      // setUploadProgress(1);
+      thumbnailUrl = await uploadThumbnail(
+        thumbnailFile,
+        process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE,
+        process.env.NEXT_PUBLIC_BUNNY_ACCESS_KEY
+      );
+    }
     try {
-      await uploadCompleteVideo({
+
+      await startUpload({
         title: formValues.title,
-        description: formValues.description,
+        description: formValues.description || undefined,
         category: formValues.category,
-        thumbnail: thumbnailFile,
-        video: videoFile,
-        fileId,
-        onProgress: (progress) => setUploadProgress(progress),
-        mediaType: 'reel'
-      });
+        thumbnailUrl: thumbnailUrl || undefined,
+        mediaType: 'reel',
+      }); // Wait for upload to finish
+      // await uploadCompleteVideo({
+      //   title: formValues.title,
+      //   description: formValues.description,
+      //   category: formValues.category,
+      //   thumbnail: thumbnailFile,
+      //   video: videoFile,
+      //   fileId,
+      //   onProgress: (progress) => setUploadProgress(progress),
+      //   mediaType: 'reel'
+      // });
       toast.success("Reel uploaded successfully!");
-      router.push("/reels");
+      // router.push("/reels");
     } catch (error) {
       toast.error(error?.message || "Failed to upload reel");
     } finally {
@@ -348,7 +380,7 @@ const ReelUploadPage = () => {
                     {isUpload ? (
                       <>
                         <CircularProgress size={20} sx={{ mr: 1 }} />
-                        Uploading... {uploadProgress}%
+                        Uploading... {progress}%
                       </>
                     ) : (
                       "Upload Reel"

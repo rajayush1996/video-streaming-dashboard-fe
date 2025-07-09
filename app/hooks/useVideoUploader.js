@@ -3,9 +3,15 @@ import axiosInstance from '@utils/axios';
 import { useState, useRef } from 'react';
 import { toast } from 'react-toastify';
 import config from '@config/config';
+import axios from 'axios';
 
 // const API_BASE_URL = 'http://localhost:5000';
 const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+const BUNNY_STORAGE_ZONE = process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE;
+const BUNNY_API_KEY = process.env.NEXT_PUBLIC_BUNNY_ACCESS_KEY; // Do NOT expose in production!
+const BUNNY_REGION = 'de'; // e.g., 'de', 'ny', 'la', 'sg'
+const BUNNY_BASE_URL = `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}`;
+
 
 const endpoints = config.endpoints;
 export function useVideoUploader() {
@@ -38,7 +44,7 @@ export function useVideoUploader() {
             });
             console.log(`Image uploaded successfully: ${response.data.file}`);
             return response.data; // Assuming backend returns { fileUrl: '...' }
-          } catch (error) {
+        } catch (error) {
             console.error(`Failed to upload image ${fileName}:`, error);
             throw new Error(`Image upload failed: ${error.message}`);
         }
@@ -165,7 +171,7 @@ export function useVideoUploader() {
             // --- Post metadata to your backend (for your database) ---
             await axiosInstance.post(endpoints.mediaMetadata, {
                 title,
-                description : description || undefined,
+                description: description || undefined,
                 category,
                 thumbnailId: thumbnailDetails && thumbnailDetails?.fileDetails?.file?.fileId || undefined,
                 mediaFileId: finalVideoDetails?.filesDetails?.fileDetails?.fileId, // Pass the obtained thumbnail URL
@@ -179,6 +185,111 @@ export function useVideoUploader() {
             if (err.message !== 'Upload canceled.') {
                 toast.error(err.message || 'Failed to upload video. Please try again.');
             }
+            throw err;
+        } finally {
+            setIsUploading(false);
+            setProgress(0);
+            uploadAbortController.current = null;
+        }
+    };
+
+
+    const uploadFileToBunny = async (file, fileName, onProgress, signal) => {
+        const url = `${process.env.NEXT_PUBLIC_BUNNY_STORAGE_HOST}/${fileName}`;
+        try {
+            const resp = await axios.put(url, file, {
+                headers: {
+                    'AccessKey': process.env.NEXT_PUBLIC_BUNNY_ACCESS_KEY,
+                    'Content-Type': file.type,
+                },
+                // progress callback
+                onUploadProgress: ev => {
+                    if (onProgress && ev.total) {
+                        const pct = Math.round((ev.loaded * 100) / ev.total);
+                        onProgress(pct);
+                    }
+                },
+                // allow > 2 GB uploads
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity,
+                // support abort()
+                signal,
+            });
+
+            if (resp.status < 200 || resp.status >= 300) {
+                throw new Error(`Upload failed (HTTP ${resp.status})`);
+            }
+
+            // return the public URL
+            return `${process.env.NEXT_PUBLIC_BUNNY_PULL_ZONE}/${fileName}`;
+        } catch (err) {
+            if (axios.isCancel(err)) {
+                throw new Error('Upload cancelled');
+            }
+            throw err;
+        }
+    };
+
+    const uploadCompleteVideo2 = async ({
+        title,
+        description,
+        category,
+        thumbnail,
+        video,
+        onProgress,
+        mediaType,
+    }) => {
+        // create an abort controller we can hook into
+        const abortController = new AbortController();
+        uploadAbortController.current = abortController;
+
+        setIsUploading(true);
+        setProgress(0);
+
+        try {
+            if (!video) {
+                throw new Error('Video file is required for upload.');
+            }
+
+            // 1️⃣ upload thumbnail (if any)
+            let thumbnailUrl = '';
+            if (thumbnail) {
+                const thumbName = `thumb_${Date.now()}_${thumbnail.name}`;
+                thumbnailUrl = await uploadFileToBunny(
+                    thumbnail,
+                    thumbName,
+                    // no progress needed for thumbnail
+                    null,
+                    abortController.signal
+                );
+                toast.success('Thumbnail uploaded!');
+            }
+
+            // 2️⃣ upload the video itself
+            const videoName = `video_${Date.now()}_${video.name}`;
+            const videoUrl = await uploadFileToBunny(
+                video,
+                videoName,
+                onProgress,
+                abortController.signal
+            );
+            setProgress(100);
+            toast.success('Video uploaded!');
+
+            // 3️⃣ save metadata backend-side
+            await axiosInstance.post(endpoints.mediaMetadata, {
+                title,
+                description,
+                category,
+                thumbnailUrl,
+                mediaFileUrl: videoUrl,
+                mediaType,
+            });
+            toast.success('Metadata saved!');
+
+            return { thumbnailUrl, videoUrl };
+        } catch (err) {
+            toast.error(err.message || 'Upload failed.');
             throw err;
         } finally {
             setIsUploading(false);
@@ -202,5 +313,6 @@ export function useVideoUploader() {
         isUploading,
         progress,
         cancelUpload,
+        uploadCompleteVideo2
     };
 }
