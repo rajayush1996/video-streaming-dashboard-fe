@@ -16,7 +16,13 @@ export async function POST(req) {
         },
       }
     );
-    return NextResponse.json(data);
+
+     const uploadUrl = `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID}/videos/${data.guid}`
+
+    return NextResponse.json({
+      videoId:  data.guid,
+      uploadUrl,
+    })
   } catch (err) {
     console.error('Error creating Bunny Stream slot:', err);
     return NextResponse.json({ error: err.message, err }, { status: 500 });

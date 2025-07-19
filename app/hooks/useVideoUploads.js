@@ -24,24 +24,36 @@ export function useVideoUpload() {
 
     try {
       // 1) create a slot
-      const create = await axios.post(
+       const { data: { videoId, uploadUrl } } = await axios.post(
         '/api/create-video',
         { title: file.name, contentType: file.type }
       );
-      const vid = create.data.guid;           // <-- use GUID
+      const vid = videoId;           // <-- use GUID
       setVideoId(vid);
 
       // 2) upload binary with progress
-      await axios.put(
-        `/api/upload-video/${vid}`,
-        file,
-        {
-          headers: { 'Content-Type': file.type },
-          onUploadProgress: ev => {
-            setProgress(Math.round((ev.loaded * 100) / ev.total));
-          }
+      // await axios.put(
+      //   `/api/upload-video/${vid}`,
+      //   file,
+      //   {
+      //     headers: { 'Content-Type': file.type },
+      //     onUploadProgress: ev => {
+      //       setProgress(Math.round((ev.loaded * 100) / ev.total));
+      //     }
+      //   }
+      // );
+
+      await axios.put(uploadUrl, file, {
+        headers: {
+          // expose a limited‐scope key via NEXT_PUBLIC_
+          AccessKey:     process.env.NEXT_PUBLIC_BUNNY_ACCESS_KEY,
+          'Content-Type': file.type,
+        },
+        onUploadProgress(evt) {
+          const pct = Math.floor((evt.loaded * 100) / (evt.total||1))
+          setProgress(pct)
         }
-      );
+      })
 
       // 3) return everything
       const playbackUrl = `https://${process.env.NEXT_PUBLIC_BUNNY_PULL_ZONE}/${vid}/playlist.m3u8`;
