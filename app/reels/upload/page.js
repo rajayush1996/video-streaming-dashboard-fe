@@ -25,7 +25,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useUploadReelChunked } from "@/hooks/useReels";
 import { useCategoriesByType } from "@/hooks/useCategories";
 import { useVideoUploader } from "@/hooks/useVideoUploader";
-import { uploadThumbnail, useVideoUpload } from "@/hooks/useVideoUpload";
+import { useVideoUpload } from "@/hooks/useVideoUploads";
 
 const ReelUploadPage = () => {
   const router = useRouter();
@@ -47,13 +47,13 @@ const ReelUploadPage = () => {
   // const { uploadCompleteVideo } = useVideoUploader();
   const [isUpload, setIsUpload] = useState(false);
 
-  const { handleFileSelect, startUpload, progress, uploading, errorMessage, fileName } = useVideoUpload({
-      zone: process.env.NEXT_PUBLIC_BUNNY_STORAGE_ZONE,
-      accessKey: process.env.NEXT_PUBLIC_BUNNY_ACCESS_KEY,
-      onComplete: (fileName) => {
-        router.push('/reels')
-      }
-    });
+   const {
+    startUpload,
+    progress,
+    uploading,
+    videoId,
+    error
+  } = useVideoUpload();
 
   const { data: categories = [] } = useCategoriesByType("reels");
 
@@ -109,7 +109,7 @@ const ReelUploadPage = () => {
       toast.error("Video must be under 500MB");
       return;
     }
-    handleFileSelect(file);
+    // handleFileSelect(file);
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
   };
@@ -154,11 +154,11 @@ const ReelUploadPage = () => {
     }
     try {
 
-      await startUpload({
+      await startUpload(videoFile, {
         title: formValues.title,
         description: formValues.description || undefined,
         category: formValues.category,
-        thumbnailUrl: thumbnailUrl || undefined,
+        // thumbnailUrl: thumbnailUrl || undefined,
         mediaType: 'reel',
       }); // Wait for upload to finish
       // await uploadCompleteVideo({
@@ -172,7 +172,7 @@ const ReelUploadPage = () => {
       //   mediaType: 'reel'
       // });
       toast.success("Reel uploaded successfully!");
-      // router.push("/reels");
+      router.push("/reels");
     } catch (error) {
       toast.error(error?.message || "Failed to upload reel");
     } finally {

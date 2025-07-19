@@ -40,7 +40,7 @@ export default function UploadVideoPage() {
     console.log(video);
     try {
       const { playbackUrl } = await startUpload(video, {
-        title, description, category
+        title, description, category, mediaType: 'video'
       });
       // ✏️ Save video record in your DB:
       // await fetch('/api/save-video', {
