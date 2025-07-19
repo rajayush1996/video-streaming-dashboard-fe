@@ -8,10 +8,8 @@
 
 [functions]
   node_bundler = "esbuild"
-  # Per Netlify's documentation, 'timeout' is an integer directly under [functions].
-  # However, given your error, Netlify's parser seems to be behaving unusually here.
-  # We will put it back in as it's the standard, but be aware of the issue.
-  timeout = 20 
+  # Removed 'timeout = 20' as it's causing a parsing error in your specific Netlify build environment.
+  # This property seems to be uniquely problematic for your setup.
 
 [build.environment]
   NODE_VERSION = "22"
