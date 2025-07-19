@@ -54,6 +54,7 @@ export function useVideoUpload() {
             });
       return { videoId: vid, playbackUrl };
     } catch (err) {
+      console.log(err);
       setError(err.message || 'Upload error');
       throw err;
     } finally {
