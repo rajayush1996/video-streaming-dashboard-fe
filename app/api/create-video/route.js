@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   const { title, contentType } = await req.json();
-//   console.log(process.env);
+  console.log("---------->",title, contentType);
   try {
     const { data } = await axios.post(
       `https://video.bunnycdn.com/library/${process.env.NEXT_PUBLIC_BUNNY_LIBRARY_ID}/videos`,
