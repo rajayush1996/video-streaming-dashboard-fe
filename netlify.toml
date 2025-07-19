@@ -1,7 +1,23 @@
 [build]
-  command   = "npm run build"
-  publish   = ".next"
-  functions = ".netlify/functions"
+  command = "npm run build"
+  publish = ".next"
+  functions = ".netlify/functions" # This is correct for Next.js functions
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# --- Add these sections ---
+
+[functions]
+  # Use esbuild for faster builds and smaller function sizes.
+  # This is often beneficial for Next.js API routes.
+  node_bundler = "esbuild"
+  
+  # Increase the timeout for your API routes.
+  # The default is 10 seconds. Netlify's free tier allows up to 26 seconds.
+  # For larger uploads, consider if 20-26 seconds is enough.
+  timeout = 20 # seconds
+
+[build.environment]
+  # Specify the Node.js version to ensure consistent behavior with your local environment.
+  NODE_VERSION = "22" # <--- UPDATED TO NODE.JS VERSION 22
