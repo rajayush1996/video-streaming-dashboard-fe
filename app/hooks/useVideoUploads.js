@@ -2,15 +2,16 @@ import { useState } from 'react';
 import axios from 'axios';
 import axiosInstance from '@utils/axios';
 import config from '@config/config';
+import { generateUniqueVideoId } from '@/utils/helpers/util';
 
 
 const { endpoints } = config;
 
 export function useVideoUpload() {
-  const [progress, setProgress]   = useState(0);
+  const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [videoId, setVideoId]     = useState(null);
-  const [error, setError]         = useState(null);
+  const [videoId, setVideoId] = useState(null);
+  const [error, setError] = useState(null);
 
   /**
    * file:         the File object from <input>
@@ -23,10 +24,17 @@ export function useVideoUpload() {
     setVideoId(null);
 
     try {
+
+      const now = new Date();
+      const uniqueId = now.getTime();
+      const newTitle = `${file.name.substring(0, file.name.lastIndexOf('.')) || file.name}_${uniqueId}`;
+      const originalExtension = file.name.includes('.') ? `.${file.name.split('.').pop()}` : '';
+      const uniqueFileNameForBunny = `${newTitle}${originalExtension}`; // Keep original extension for clarity
+
       // 1) create a slot
-       const { data: { videoId, uploadUrl } } = await axios.post(
+      const { data: { videoId, uploadUrl } } = await axios.post(
         '/api/create-video',
-        { title: file.name, contentType: file.type }
+        { title: uniqueFileNameForBunny, contentType: file.type }
       );
       const vid = videoId;           // <-- use GUID
       setVideoId(vid);
@@ -46,11 +54,11 @@ export function useVideoUpload() {
       await axios.put(uploadUrl, file, {
         headers: {
           // expose a limited‐scope key via NEXT_PUBLIC_
-          AccessKey:     process.env.NEXT_PUBLIC_BUNNY_ACCESS_KEY,
+          AccessKey: process.env.NEXT_PUBLIC_BUNNY_ACCESS_KEY,
           'Content-Type': file.type,
         },
         onUploadProgress(evt) {
-          const pct = Math.floor((evt.loaded * 100) / (evt.total||1))
+          const pct = Math.floor((evt.loaded * 100) / (evt.total || 1))
           setProgress(pct)
         }
       })
@@ -58,12 +66,12 @@ export function useVideoUpload() {
       // 3) return everything
       const playbackUrl = `https://${process.env.NEXT_PUBLIC_BUNNY_PULL_ZONE}/${vid}/playlist.m3u8`;
 
-			console.log("TCL: startUpload -> playbackUrl", playbackUrl)
-        await axiosInstance.post(endpoints.mediaMetadata, {
-            ...metadata,
-            mediaFileUrl: playbackUrl,
-            mediaFileId: vid
-            });
+      console.log("TCL: startUpload -> playbackUrl", playbackUrl)
+      await axiosInstance.post(endpoints.mediaMetadata, {
+        ...metadata,
+        mediaFileUrl: playbackUrl,
+        mediaFileId: vid
+      });
       return { videoId: vid, playbackUrl };
     } catch (err) {
       console.log(err);
