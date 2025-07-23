@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -13,6 +13,7 @@ import {
   TextField,
   Pagination,
   Stack,
+  MenuItem,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -29,20 +30,66 @@ export default function VideoRowList({
   totalPages = 1,
   currentPage = 1,
   onPageChange,
-  isLoading = false
+  isLoading = false,
+  categories=[]
 }) {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentVideo, setCurrentVideo] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const router = useRouter();
 
   const openEditModal = (video) => {
     setCurrentVideo(video);
     setTitle(video?.title);
     setDescription(video?.description);
+    setCategory(video?.category || "");
     setEditModalOpen(true);
   };
+
+  const options = useMemo(() => {
+    // 1) Normalize parentId to string or null, build a flat map
+    const flat = categories.map(c => ({
+      id: c.id,
+      name: c.name,
+      parentId:
+        c.parentId == null
+          ? null
+          : typeof c.parentId === 'object'
+          ? c.parentId.id
+          : c.parentId,
+      children: [],
+    }));
+
+    // 2) Attach children
+    const lookup = {};
+    flat.forEach(item => {
+      lookup[item.id] = item;
+    });
+    flat.forEach(item => {
+      if (item.parentId && lookup[item.parentId]) {
+        lookup[item.parentId].children.push(item);
+      }
+    });
+
+    // 3) Find roots and DFS to flatten with indent
+    const roots = flat.filter(item => !item.parentId);
+    const out = [];
+    function dfs(nodes, depth = 0) {
+      nodes.forEach(n => {
+        out.push({
+          value: n.id,
+          label: `${'— '.repeat(depth)}${n.name}`,
+        });
+        if (n.children.length) dfs(n.children, depth + 1);
+      });
+    }
+    dfs(roots);
+    return out;
+  }, [categories]);
+
+  
 
   const handleSave = async () => {
     if (currentVideo) {
@@ -50,7 +97,8 @@ export default function VideoRowList({
         id: currentVideo?.id,
         data: {
           title,
-          description
+          description,
+          category,
         }
       });
     }
@@ -77,6 +125,7 @@ export default function VideoRowList({
     );
   }
 
+                console.log("🚀 ~ :129 ~ options:", options)
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {videos.map((video) => (
@@ -337,6 +386,30 @@ export default function VideoRowList({
                   },
                 }}
               />
+
+              {/* Category */}
+              <TextField
+                select
+                label="Category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ style: { color: "#e0e0e0" } }}
+                InputProps={{
+                  style: {
+                    color: "#fff",
+                    borderColor: "#555",
+                    backgroundColor: "#1e1e1e",
+                  },
+                }}
+              >
+                {options.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value} sx={{ color: "#fff" }}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Box>
           </DialogContent>
           <DialogActions>

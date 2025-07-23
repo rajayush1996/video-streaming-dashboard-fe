@@ -145,6 +145,7 @@ export default function VideosPage() {
         currentPage={page}
         onPageChange={setPage}
         isLoading={isLoading}
+        categories={categoryResponse}
       />
     </Container>
   );
