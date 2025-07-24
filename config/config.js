@@ -30,7 +30,8 @@ const config = {
       uploadStatus: '/api/v1/admin/upload/status',
       uploadChunk: '/api/v1/admin/upload/chunk',
       uploadComplete: '/api/v1/admin/upload/complete',
-      
+      creator: '/api/v1/creator-requests',
+      adminCreator: '/api/v1/admin/creator-requests'
     },
   };
   

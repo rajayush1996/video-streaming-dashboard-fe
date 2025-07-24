@@ -10,7 +10,8 @@ export const useUpdateVideo = () => {
 
   return useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await axios.patch(
+      console.log("🚀 ~ :13 ~ useUpdateVideo ~ data:", data);
+      const response = await axios.put(
         `${config.endpoints.mediaMetadata}/${id}`,
         data
       );

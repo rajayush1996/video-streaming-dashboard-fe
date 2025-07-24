@@ -92,6 +92,7 @@ export default function VideoRowList({
   
 
   const handleSave = async () => {
+    console.log("🚀 ~ :95 ~ handleSave ~ currentVideo:", currentVideo)
     if (currentVideo) {
       await onUpdate({
         id: currentVideo?.id,
@@ -125,7 +126,7 @@ export default function VideoRowList({
     );
   }
 
-                console.log("🚀 ~ :129 ~ options:", options)
+                // console.log("🚀 ~ :129 ~ options:", options)
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {videos.map((video) => (
