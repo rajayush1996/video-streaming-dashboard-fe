@@ -24,6 +24,9 @@ import {
   Chip,
   Divider,
   Stack,
+  FormControlLabel,
+  Switch,
+  Tooltip,
 } from "@mui/material";
 
 import LaunchIcon from "@mui/icons-material/Launch";
@@ -42,6 +45,8 @@ import FlagIcon from "@mui/icons-material/Flag";
 import StorageIcon from "@mui/icons-material/Storage";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import RefreshIcon from "@mui/icons-material/Refresh";
+
 import {
   useFetchCreatorRequests,
   useHandleCreatorRequest,
@@ -154,13 +159,19 @@ const getActivityIcon = (action, resourceType) => {
 // Homepage component
 function HomePage() {
   const router = useRouter();
-  const { data, isLoading, isError } = useDashboardData();
-
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch: refetchDashboard,
+  } = useDashboardData();
+  const [autoRefresh, setAutoRefresh] = useState(false);
 
   const {
     data: creatorRequests = [],
     isLoading: isCRLoading,
     isError: crError,
+    refetch: refetchRequests,
   } = useFetchCreatorRequests();
 
   const { mutate: handleRequest, isLoading: isHandling } =
@@ -169,10 +180,24 @@ function HomePage() {
   // helper to format date
   const fmtTime = (ts) => formatRelativeTime(ts);
 
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const interval = setInterval(() => {
+      refetchDashboard();
+      refetchRequests();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [autoRefresh, refetchDashboard, refetchRequests]);
+
   // Redirect functions
   const goToVideoUpload = () => router.push("/videos/upload");
   const goToBlogUpload = () => router.push("/blogs/upload");
   const goToFlagged = () => router.push("/flagged");
+
+  const handleRefresh = () => {
+    refetchDashboard();
+    refetchRequests();
+  };
 
   // Map API response to component data
   const metrics = data?.metrics || {};
@@ -181,9 +206,36 @@ function HomePage() {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom fontWeight="bold" color="primary">
-        Dashboard Overview
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 1,
+        }}
+      >
+        <Typography variant="h4" gutterBottom fontWeight="bold" color="primary">
+          Dashboard Overview
+        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={autoRefresh}
+                onChange={() => setAutoRefresh(!autoRefresh)}
+                color="primary"
+              />
+            }
+            label="Auto Refresh"
+            sx={{ mr: 1 }}
+          />
+          <Tooltip title="Refresh now">
+            <IconButton onClick={handleRefresh} color="primary">
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
 
       {/* Overview Metrics */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -562,11 +614,14 @@ function HomePage() {
                   <TableHead>
                     <TableRow>
                       <TableCell>User</TableCell>
-                      <TableCell>Reason</TableCell>
-                      <TableCell>Content Focus</TableCell>
-                      <TableCell>Portfolio</TableCell>
+                      {/* <TableCell>Reason</TableCell>
+                      <TableCell>Content Focus</TableCell> */}
+                      <TableCell>Name</TableCell>
+                      <TableCell>Profile URL</TableCell>
+                      {/* <TableCell>Portfolio</TableCell> */}
                       <TableCell>Documents</TableCell>
-                      <TableCell>Submitted</TableCell>
+                      <TableCell>ID Proof</TableCell>
+                      {/* <TableCell>Submitted</TableCell> */}
                       <TableCell>Status</TableCell>
                       <TableCell align="right">Actions</TableCell>
                     </TableRow>
@@ -575,8 +630,9 @@ function HomePage() {
                     {creatorRequests.map((req) => (
                       <TableRow key={req.id} hover>
                         <TableCell>{req.userId}</TableCell>
-                        <TableCell>{req.reason}</TableCell>
-                        <TableCell>
+                        <TableCell>{req.name}</TableCell>
+                        {/* <TableCell>{req.reason}</TableCell> */}
+                        {/* <TableCell>
                           {req.contentFocus || (
                             <Typography
                               variant="caption"
@@ -585,12 +641,12 @@ function HomePage() {
                               —
                             </Typography>
                           )}
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell>
-                          {req.portfolio ? (
+                          {req?.photo ? (
                             <IconButton
                               component="a"
-                              href={req.portfolio}
+                              href={req?.photo}
                               target="_blank"
                               rel="noopener"
                               size="small"
@@ -631,8 +687,44 @@ function HomePage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {formatRelativeTime(req.createdAt)}
+                          {req?.idProof ? (
+                            <IconButton
+                              size="small"
+                              component="a"
+                              href={req?.idProof}
+                              target="_blank"
+                              rel="noopener"
+                              title={req?.idProof.split("/").pop()}
+                            >
+                              <DescriptionIcon fontSize="small" />
+                            </IconButton>
+                          ) : (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              None
+                            </Typography>
+                          )}
                         </TableCell>
+                        {/* <TableCell>
+                          {formatRelativeTime(req.createdAt)}
+                          {req.idProof ? (
+                            <IconButton
+                              size="small"
+                              component="a"
+                              href={req.idProof}
+                              target="_blank"
+                              rel="noopener"
+                            >
+                              <DescriptionIcon fontSize="small" />
+                            </IconButton>
+                          ) : (
+                            <Typography variant="caption" color="text.secondary">
+                              —
+                            </Typography>
+                          )}
+                        </TableCell> */}
                         <TableCell>
                           <Chip
                             label={req.status.toUpperCase()}
@@ -657,7 +749,10 @@ function HomePage() {
                               color="success"
                               disabled={isHandling}
                               onClick={() =>
-                                handleRequest({ id: req.id, status: "approved" })
+                                handleRequest({
+                                  id: req.id,
+                                  status: "approved",
+                                })
                               }
                             >
                               <CheckIcon fontSize="small" />
@@ -667,7 +762,10 @@ function HomePage() {
                               color="error"
                               disabled={isHandling}
                               onClick={() =>
-                                handleRequest({ id: req.id, action: "rejected" })
+                                handleRequest({
+                                  id: req.id,
+                                  action: "rejected",
+                                })
                               }
                             >
                               <CloseIcon fontSize="small" />

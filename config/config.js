@@ -31,7 +31,8 @@ const config = {
       uploadChunk: '/api/v1/admin/upload/chunk',
       uploadComplete: '/api/v1/admin/upload/complete',
       creator: '/api/v1/creator-requests',
-      adminCreator: '/api/v1/admin/creator-requests'
+      adminCreator: '/api/v1/admin/creator-requests',
+      notifications: '/api/v1/admin/notifications'
     },
   };
   

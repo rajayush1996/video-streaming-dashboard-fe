@@ -7,6 +7,7 @@ import { useLogout } from '@/hooks/useAuth';
 import { getStoredUserData } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { toast } from 'react-toastify';
+import NotificationsMenu from './NotificationsMenu';
 import {
   AppBar,
   Box,
@@ -252,6 +253,7 @@ export default function DashboardLayout({ children }) {
               {getPageTitle(pathname)}
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
+            <NotificationsMenu />
             <div className="relative" ref={profileRef}>
               <IconButton
                 onClick={handleProfileMenuOpen}
