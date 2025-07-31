@@ -166,7 +166,7 @@ function HomePage() {
     isError,
     refetch: refetchDashboard,
   } = useDashboardData();
-  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const {
@@ -497,7 +497,7 @@ function HomePage() {
 
         {/* System Status */}
         <Grid item xs={12} md={5}>
-          <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+          <Paper elevation={3} sx={{ p: 3, borderRadius: 2, height: "100%" }}>
             <Typography variant="h5" gutterBottom fontWeight="bold">
               System Status
             </Typography>
@@ -506,7 +506,7 @@ function HomePage() {
             {isLoading ? (
               <LinearProgress />
             ) : (
-              <Stack spacing={4}>
+              <Stack spacing={{ xs: 2, sm: 4, md: 8 }}>
                 <Box>
                   <Box
                     sx={{
@@ -603,7 +603,7 @@ function HomePage() {
                   </Grid>
                 </Box>
 
-                <Box sx={{ mt: 2 }}>
+                <Box sx={{ mt: 5 }}>
                   <Button
                     variant="outlined"
                     color="warning"
