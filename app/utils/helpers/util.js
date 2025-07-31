@@ -12,3 +12,16 @@ export function generateUniqueVideoId(prefix = '') {
     // randomUUID() generates a UUID v4 string (e.g., '1b9d67b0-adad-474d-b36c-940026377464')
     return `${prefix}${randomUUID()}`;
 }
+
+
+export function formatDate(dateString) {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}

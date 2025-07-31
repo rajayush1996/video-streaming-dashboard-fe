@@ -36,6 +36,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { styled } from "@mui/material/styles";
 import { useDashboardData } from "@hooks/useDashboard";
 import VideocamIcon from "@mui/icons-material/Videocam";
+import LiveTvIcon from "@mui/icons-material/LiveTv";
 import ArticleIcon from "@mui/icons-material/Article";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PeopleIcon from "@mui/icons-material/People";
@@ -166,6 +167,7 @@ function HomePage() {
     refetch: refetchDashboard,
   } = useDashboardData();
   const [autoRefresh, setAutoRefresh] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const {
     data: creatorRequests = [],
@@ -183,20 +185,19 @@ function HomePage() {
   useEffect(() => {
     if (!autoRefresh) return;
     const interval = setInterval(() => {
-      refetchDashboard();
-      refetchRequests();
+      handleRefresh(); // call wrapped one that spins too
     }, 30000);
     return () => clearInterval(interval);
-  }, [autoRefresh, refetchDashboard, refetchRequests]);
-
+  }, [autoRefresh]);
   // Redirect functions
   const goToVideoUpload = () => router.push("/videos/upload");
   const goToBlogUpload = () => router.push("/blogs/upload");
   const goToFlagged = () => router.push("/flagged");
 
-  const handleRefresh = () => {
-    refetchDashboard();
-    refetchRequests();
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchDashboard(), refetchRequests()]);
+    setTimeout(() => setRefreshing(false), 1000); // spin for 1s
   };
 
   // Map API response to component data
@@ -231,7 +232,7 @@ function HomePage() {
           />
           <Tooltip title="Refresh now">
             <IconButton onClick={handleRefresh} color="primary">
-              <RefreshIcon />
+              <RefreshIcon className={refreshing ? "spin" : ""} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -249,7 +250,7 @@ function HomePage() {
                 {isLoading ? (
                   <LinearProgress />
                 ) : (
-                  <AnimatedCounter value={metrics.videosCount || 0} />
+                  <AnimatedCounter value={metrics.approvedVideos || 0} />
                 )}
               </Typography>
               <Typography
@@ -263,7 +264,7 @@ function HomePage() {
           </StyledMetricCard>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        {/* <Grid item xs={12} sm={6} md={3}>
           <StyledMetricCard color="secondary">
             <CardContent sx={{ textAlign: "center", p: 3 }}>
               <IconContainer>
@@ -273,7 +274,7 @@ function HomePage() {
                 {isLoading ? (
                   <LinearProgress />
                 ) : (
-                  <AnimatedCounter value={metrics.blogsCount || 0} />
+                  <AnimatedCounter value={metrics.approvedReels || 0} />
                 )}
               </Typography>
               <Typography
@@ -282,6 +283,30 @@ function HomePage() {
                 sx={{ opacity: 0.8 }}
               >
                 Total Blogs
+              </Typography>
+            </CardContent>
+          </StyledMetricCard>
+        </Grid> */}
+
+        <Grid item xs={12} sm={6} md={3}>
+          <StyledMetricCard color="secondary">
+            <CardContent sx={{ textAlign: "center", p: 3 }}>
+              <IconContainer>
+                <LiveTvIcon sx={{ fontSize: 32, color: "white" }} />
+              </IconContainer>
+              <Typography variant="h3" component="div" fontWeight="bold">
+                {isLoading ? (
+                  <LinearProgress />
+                ) : (
+                  <AnimatedCounter value={metrics.approvedReels || 0} />
+                )}
+              </Typography>
+              <Typography
+                variant="subtitle1"
+                color="inherit"
+                sx={{ opacity: 0.8 }}
+              >
+                Total Reels
               </Typography>
             </CardContent>
           </StyledMetricCard>
