@@ -155,7 +155,7 @@ export default function VideoRowList({
           <Box
             sx={{
               position: "relative",
-              minWidth: 180,
+              width: 180,
               height: 120,
               borderRadius: 1,
               overflow: "hidden",
@@ -166,18 +166,20 @@ export default function VideoRowList({
             onMouseLeave={() => setHoveredId(null)}
           >
             {hoveredId === video?.id && video?.previewUrl ? (
-              <video
+              <Image
                 src={video.previewUrl}
-                muted
-                loop
-                playsInline
-                autoPlay
-                style={{
-                  objectFit: "cover",
-                  width: "100%",
-                  height: "100%",
-                }}
-                unoptimized
+                // muted
+                // loop
+                // playsInline
+                // autoPlay
+                width={200}
+                height={180}
+                // style={{
+                //   objectFit: "cover",
+                //   width: "100%",
+                //   height: "100%",
+                // }}
+                // unoptimized
               />
             ) : video?.thumbnailUrl ? (
               <Image
