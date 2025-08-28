@@ -47,6 +47,14 @@ function ModerationTable({ title, items, onAction }) {
   const [rejectReason, setRejectReason] = useState("");
   const [selectedItemId, setSelectedItemId] = useState(null);
 
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
+
+  const handleViewVideo = (url) => {
+    setSelectedVideoUrl(url);
+    setVideoDialogOpen(true);
+  };
+
   return (
     <Box sx={{ mb: 4 }}>
       <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
@@ -98,13 +106,14 @@ function ModerationTable({ title, items, onAction }) {
                 <TableCell>{item?.processingStatus || "-"}</TableCell>
                 <TableCell>
                   {item?.processingStatus === "completed" && item?.videoUrl ? (
-                    <a
-                      href={item.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{ textTransform: "none" }}
+                      onClick={() => handleViewVideo(item.videoUrl)}
                     >
-                      {item.videoUrl}
-                    </a>
+                      View Video
+                    </Button>
                   ) : (
                     "Video URL not ready"
                   )}
@@ -177,6 +186,37 @@ function ModerationTable({ title, items, onAction }) {
           >
             Submit
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={videoDialogOpen}
+        onClose={() => setVideoDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Video Preview</DialogTitle>
+        <DialogContent>
+          {selectedVideoUrl && (
+            <Box sx={{ position: "relative", paddingTop: "56.25%" }}>
+              <iframe
+                src={selectedVideoUrl}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: 0,
+                }}
+                allow="autoplay; fullscreen"
+                allowFullScreen
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setVideoDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>
