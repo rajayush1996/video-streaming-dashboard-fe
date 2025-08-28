@@ -33,22 +33,41 @@ import {
   useModerationAction,
 } from "@/hooks/useModeration";
 import { formatDate } from "@/utils/helpers/util";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import Hls from "hls.js";
 
 function ModerationTable({ title, items, onAction }) {
   if (!items.length) return null;
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  console.log(
-    "🚀 ~ :38 ~ ModerationTable ~ rejectDialogOpen:",
-    rejectDialogOpen
-  );
   const [rejectReason, setRejectReason] = useState("");
   const [selectedItemId, setSelectedItemId] = useState(null);
 
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    let hls;
+    const video = videoRef.current;
+    if (videoDialogOpen && selectedVideoUrl && video) {
+      if (Hls.isSupported() && selectedVideoUrl.endsWith(".m3u8")) {
+        hls = new Hls();
+        hls.loadSource(selectedVideoUrl);
+        hls.attachMedia(video);
+      } else {
+        video.src = selectedVideoUrl;
+      }
+    }
+    return () => {
+      if (hls) hls.destroy();
+      if (video) {
+        video.pause();
+        video.removeAttribute("src");
+      }
+    };
+  }, [videoDialogOpen, selectedVideoUrl]);
 
   const handleViewVideo = (url) => {
     setSelectedVideoUrl(url);
@@ -199,18 +218,16 @@ function ModerationTable({ title, items, onAction }) {
         <DialogContent>
           {selectedVideoUrl && (
             <Box sx={{ position: "relative", paddingTop: "56.25%" }}>
-              <iframe
-                src={selectedVideoUrl}
+              <video
+                ref={videoRef}
+                controls
                 style={{
                   position: "absolute",
                   top: 0,
                   left: 0,
                   width: "100%",
                   height: "100%",
-                  border: 0,
                 }}
-                allow="autoplay; fullscreen"
-                allowFullScreen
               />
             </Box>
           )}
