@@ -3,12 +3,12 @@
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
-  CardMedia,
   Button,
   Stack,
-  Chip,
+  FormControlLabel,
+  Switch,
+  Tooltip,
+  IconButton,
   TableContainer,
   Paper,
   Table,
@@ -21,31 +21,121 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  FormControlLabel,
-  Switch,
-  Tooltip,
-  IconButton,
 } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import NoData from "@/components/NoData";
-import {
-  usePendingModeration,
-  useModerationAction,
-} from "@/hooks/useModeration";
+import { usePendingModeration, useModerationAction } from "@/hooks/useModeration";
 import { formatDate } from "@/utils/helpers/util";
-import { useEffect, useState } from "react";
-import RefreshIcon from "@mui/icons-material/Refresh";
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import Hls from "hls.js";
 
+/* ------------------------------
+   HLS-aware <video> wrapper (JS)
+   ------------------------------ */
+const HlsVideo = forwardRef(function HlsVideo(
+  { src, poster, ...props },
+  ref
+) {
+  const vidRef = useRef(null);
+  const hlsRef = useRef(null);
+  useImperativeHandle(ref, () => vidRef.current);
+
+  useEffect(() => {
+    const v = vidRef.current;
+    if (!v || !src) return;
+
+    // cleanup any previous instance
+    if (hlsRef.current) {
+      try { hlsRef.current.stopLoad(); hlsRef.current.destroy(); } catch {}
+      hlsRef.current = null;
+    }
+    try { v.pause(); v.removeAttribute("src"); v.load(); } catch {}
+
+    const isM3U8 = /\.m3u8($|\?)/i.test(src);
+
+    if (isM3U8 && Hls.isSupported()) {
+      const hls = new Hls({
+        // xhrSetup: (xhr) => { xhr.withCredentials = true; }, // if your CDN uses cookies
+        // lowLatencyMode: true,
+      });
+      hlsRef.current = hls;
+
+      hls.attachMedia(v);
+      hls.on(Hls.Events.MEDIA_ATTACHED, () => hls.loadSource(src));
+      hls.on(Hls.Events.ERROR, (_e, data) => {
+        console.error("HLS error", data);
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError();
+              break;
+            default:
+              try { hls.destroy(); } catch {}
+              hlsRef.current = null;
+              try { v.src = src; v.load(); } catch {}
+          }
+        }
+      });
+    } else if (isM3U8 && v.canPlayType("application/vnd.apple.mpegurl")) {
+      // Native HLS (Safari/iOS)
+      // v.crossOrigin = "anonymous"; // if CORS needed
+      v.src = src;
+      v.load();
+    } else {
+      // MP4 or anything else
+      v.src = src;
+      v.load();
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        try { hlsRef.current.stopLoad(); hlsRef.current.destroy(); } catch {}
+        hlsRef.current = null;
+      }
+      if (v) {
+        try { v.pause(); v.removeAttribute("src"); v.load(); } catch {}
+      }
+    };
+  }, [src]);
+
+  return (
+    <video
+      ref={vidRef}
+      poster={poster}
+      controls
+      playsInline
+      preload="metadata"
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "#000" }}
+      {...props}
+    />
+  );
+});
+
+/* ------------------------------
+   Moderation Table
+   ------------------------------ */
 function ModerationTable({ title, items, onAction }) {
   if (!items.length) return null;
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  console.log(
-    "🚀 ~ :38 ~ ModerationTable ~ rejectDialogOpen:",
-    rejectDialogOpen
-  );
   const [rejectReason, setRejectReason] = useState("");
   const [selectedItemId, setSelectedItemId] = useState(null);
+
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
+  const [selectedPoster, setSelectedPoster] = useState("");
+
+  const videoElRef = useRef(null);
+
+  const handleViewVideo = (url, poster) => {
+    setSelectedVideoUrl(url || "");
+    setSelectedPoster(poster || "");
+    setVideoDialogOpen(true);
+  };
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -64,7 +154,10 @@ function ModerationTable({ title, items, onAction }) {
               <TableCell>Description</TableCell>
               <TableCell>Length</TableCell>
               <TableCell>Category</TableCell>
-              <TableCell>createdAt</TableCell>
+              <TableCell>Processing Status</TableCell>
+              <TableCell>Video</TableCell>
+              <TableCell>Comment</TableCell>
+              <TableCell>Created At</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -76,22 +169,44 @@ function ModerationTable({ title, items, onAction }) {
                   <img
                     src={item.thumbnailUrl}
                     alt={item.title}
-                    style={{ width: 50, height: 50, borderRadius: 4 }}
+                    style={{ width: 50, height: 50, borderRadius: 4, objectFit: "cover" }}
                   />
                 </TableCell>
                 <TableCell>{item.title}</TableCell>
                 <TableCell>
                   {item?.userProfile?.displayName ||
-                    item.userCred?.username ||
-                    item.userCred?.email ||
+                    item?.userCred?.username ||
+                    item?.userCred?.email ||
                     "Unknown User"}
                 </TableCell>
                 <TableCell>{item.mediaType || "-"}</TableCell>
                 <TableCell>{item.description || "-"}</TableCell>
-                <TableCell>
-                  {item.lengthSec ? `${item.lengthSec}s` : "-"}
-                </TableCell>
+                <TableCell>{item.lengthSec ? `${item.lengthSec}s` : "-"}</TableCell>
                 <TableCell>{item?.category?.name || "-"}</TableCell>
+                <TableCell>{item?.processingStatus || "-"}</TableCell>
+                <TableCell>
+                  {item?.processingStatus === "done" && item?.videoUrl ? (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      sx={{ textTransform: "none" }}
+                      onClick={() => handleViewVideo(item.videoUrl, item.thumbnailUrl)}
+                    >
+                      View Video
+                    </Button>
+                  ) : (
+                    "Not ready"
+                  )}
+                </TableCell>
+                <TableCell>
+                  {item?.processingStatus === "uploading"
+                    ? "Video is currently uploading"
+                    : item?.processingStatus === "processing"
+                    ? "Video is currently processing"
+                    : item?.processingStatus === "done"
+                    ? "Video processing complete"
+                    : "-"}
+                </TableCell>
                 <TableCell>{formatDate(item?.createdAt) || "-"}</TableCell>
                 <TableCell>
                   <Button
@@ -122,10 +237,8 @@ function ModerationTable({ title, items, onAction }) {
         </Table>
       </TableContainer>
 
-      <Dialog
-        open={rejectDialogOpen}
-        onClose={() => setRejectDialogOpen(false)}
-      >
+      {/* Reject dialog */}
+      <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)}>
         <DialogTitle>Reject Reason</DialogTitle>
         <DialogContent>
           <TextField
@@ -153,31 +266,44 @@ function ModerationTable({ title, items, onAction }) {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Video dialog */}
+      <Dialog
+        open={videoDialogOpen}
+        onClose={() => setVideoDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Video Preview</DialogTitle>
+        <DialogContent>
+          {selectedVideoUrl && (
+            <Box sx={{ position: "relative", paddingTop: "56.25%" }}>
+              {/* Simple, reliable: HlsVideo does all the work */}
+              <HlsVideo
+                key={selectedVideoUrl}
+                ref={videoElRef}
+                src={selectedVideoUrl}
+                poster={selectedPoster}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setVideoDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
 
-// function ModerationSection({ title, items, onAction }) {
-//   if (!items.length) return null;
-//   return (
-//     <Box sx={{ mb: 4 }}>
-//       <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>
-//         {title}
-//       </Typography>
-//       {items.map((item) => (
-//         <ModerationCard key={item.id} item={item} onAction={onAction} />
-//       ))}
-//     </Box>
-//   );
-// }
-
+/* ------------------------------
+   Page container
+   ------------------------------ */
 function PendingModerationPage() {
-  // 🟢 Step 1: All hooks at the top in order
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [triggerRefresh, setTriggerRefresh] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-
 
   const { data, isLoading, refetch } = usePendingModeration();
   const action = useModerationAction();
@@ -186,35 +312,23 @@ function PendingModerationPage() {
     action.mutate({ id, status, reason });
   };
 
-  // 🟡 Step 2: Auto-refresh interval
   useEffect(() => {
     if (!autoRefresh) return;
-
     const interval = setInterval(() => {
       setLastRefresh(new Date());
-      setTriggerRefresh((prev) => prev + 1);
+      setTriggerRefresh((p) => p + 1);
     }, 30000);
-
     return () => clearInterval(interval);
   }, [autoRefresh]);
 
-  // 🟡 Step 3: Refetch trigger
   useEffect(() => {
     refetch();
   }, [triggerRefresh]);
 
-  // 🟠 Step 4: Loading state
   if (isLoading) return <LoadingSkeleton count={6} height={120} />;
 
   const items = data || [];
-
-  const grouped = {
-    videos: [],
-    reels: [],
-    blogs: [],
-    others: [],
-  };
-
+  const grouped = { videos: [], reels: [], blogs: [], others: [] };
   items.forEach((item) => {
     const type = (item.mediaType || item.type || "").toLowerCase();
     if (type === "video" || type === "videos") grouped.videos.push(item);
@@ -223,10 +337,8 @@ function PendingModerationPage() {
     else grouped.others.push(item);
   });
 
-  // 🟢 Step 5: UI
   return (
     <Box>
-      {/* 🔁 Refresh Controls */}
       <Stack
         direction="row"
         alignItems="center"
@@ -250,7 +362,7 @@ function PendingModerationPage() {
               onClick={() => {
                 setRefreshing(true);
                 setLastRefresh(new Date());
-                setTriggerRefresh((prev) => prev + 1);
+                setTriggerRefresh((p) => p + 1);
                 setTimeout(() => setRefreshing(false), 1000);
               }}
             >
@@ -263,31 +375,14 @@ function PendingModerationPage() {
         </Typography>
       </Stack>
 
-      {/* No Data fallback */}
       {items.length === 0 ? (
         <NoData message="No pending content" />
       ) : (
         <>
-          <ModerationTable
-            title="Videos"
-            items={grouped.videos}
-            onAction={handleAction}
-          />
-          <ModerationTable
-            title="Reels"
-            items={grouped.reels}
-            onAction={handleAction}
-          />
-          <ModerationTable
-            title="Blogs"
-            items={grouped.blogs}
-            onAction={handleAction}
-          />
-          <ModerationTable
-            title="Other"
-            items={grouped.others}
-            onAction={handleAction}
-          />
+          <ModerationTable title="Videos" items={grouped.videos} onAction={handleAction} />
+          <ModerationTable title="Reels" items={grouped.reels} onAction={handleAction} />
+          <ModerationTable title="Blogs" items={grouped.blogs} onAction={handleAction} />
+          <ModerationTable title="Other" items={grouped.others} onAction={handleAction} />
         </>
       )}
     </Box>
