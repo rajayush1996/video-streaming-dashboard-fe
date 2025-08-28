@@ -64,6 +64,9 @@ function ModerationTable({ title, items, onAction }) {
               <TableCell>Description</TableCell>
               <TableCell>Length</TableCell>
               <TableCell>Category</TableCell>
+              <TableCell>Processing Status</TableCell>
+              <TableCell>Video URL</TableCell>
+              <TableCell>Comment</TableCell>
               <TableCell>createdAt</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -92,6 +95,29 @@ function ModerationTable({ title, items, onAction }) {
                   {item.lengthSec ? `${item.lengthSec}s` : "-"}
                 </TableCell>
                 <TableCell>{item?.category?.name || "-"}</TableCell>
+                <TableCell>{item?.processingStatus || "-"}</TableCell>
+                <TableCell>
+                  {item?.processingStatus === "completed" && item?.videoUrl ? (
+                    <a
+                      href={item.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {item.videoUrl}
+                    </a>
+                  ) : (
+                    "Video URL not ready"
+                  )}
+                </TableCell>
+                <TableCell>
+                  {item?.processingStatus === "uploading"
+                    ? "Video is currently uploading"
+                    : item?.processingStatus === "processing"
+                    ? "Video is currently processing"
+                    : item?.processingStatus === "completed"
+                    ? "Video processing complete"
+                    : "-"}
+                </TableCell>
                 <TableCell>{formatDate(item?.createdAt) || "-"}</TableCell>
                 <TableCell>
                   <Button
