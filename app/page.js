@@ -600,6 +600,39 @@ function HomePage() {
                         <Typography variant="body2">Blogs</Typography>
                       </Paper>
                     </Grid>
+                    <Grid item xs={6}>
+                      <Paper
+                        sx={{
+                          p: 2,
+                          textAlign: "center",
+                          bgcolor: "success.light",
+                          color: "success.contrastText",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Typography variant="h4" fontWeight="bold">
+                          {systemStatus.moderation?.pendingReels || 0}
+                        </Typography>
+                        <Typography variant="body2">Reels</Typography>
+                      </Paper>
+                    </Grid>
+
+                    <Grid item xs={6}>
+                      <Paper
+                        sx={{
+                          p: 2,
+                          textAlign: "center",
+                          bgcolor: "info.light",
+                          color: "info.contrastText",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Typography variant="h4" fontWeight="bold">
+                          {systemStatus.moderation?.totalPending || 0}
+                        </Typography>
+                        <Typography variant="body2">Total</Typography>
+                      </Paper>
+                    </Grid>
                   </Grid>
                 </Box>
 
